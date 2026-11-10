@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Outside inbox · local safe lab</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#0b1118;color:#e7eef4;font:14px/1.5 system-ui,"Segoe UI",sans-serif}.wrap{max-width:900px;margin:38px auto;padding:0 18px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.badge{border:1px solid #30675c;background:#132f2b;color:#9aebd6;padding:6px 9px;border-radius:999px;font-size:10px;font-weight:800}.card{margin-top:20px;padding:20px;border:1px solid #2b3b49;border-radius:16px;background:#131e28}.card h1{font-size:25px;margin:0 0 5px}.muted{color:#96a8b7;font-size:12px}.empty{display:grid;place-items:center;min-height:220px;border:1px dashed #3c4d5b;border-radius:12px;color:#9aabb8;margin-top:15px}.received{margin-top:16px;padding:14px;border:1px solid #367a65;background:#142b25;border-radius:12px}.received h2{font-size:15px;color:#b2efd9;margin:0 0 5px}.download{display:inline-block;margin-top:8px;color:#9dc7ff;font-weight:800}iframe{width:100%;height:420px;border:1px solid #344653;border-radius:10px;background:#fff;margin-top:16px}.safe{padding:10px 12px;background:#202b35;border-radius:9px;margin-top:15px;color:#c2cfd8;font-size:11px}a{color:#9dc7ff}.top a{font-size:12px}
+</style></head>
+<body><main class="wrap">
+  <nav class="top"><strong>Outside inbox</strong><span class="badge">● LOCAL RECEIVER · 127.0.0.1</span></nav>
+  <section class="card"><h1>Receiver inbox</h1><p class="muted">A separate local page representing the EvilGPT destination. It only receives the fixed fictional fields from this demo.</p>
+    <div id="empty" class="empty">No file received. Block the request in EvilGPT, or explicitly allow the simulated transfer to see it appear here.</div>
+    <div id="received" class="received" hidden><h2>File received: sensitive-info-received.pdf</h2><div id="receivedAt" class="muted"></div><a class="download" href="/api/receiver/sensitive.pdf" download="sensitive-info-received.pdf">Download the received PDF</a><iframe title="Received PDF preview" src="/api/receiver/view.pdf"></iframe></div>
+    <div class="safe"><strong>Safe lab boundary:</strong> the server listens only on this computer, accepts no user-uploaded content, and generates the file from built-in fake fields. It does not contact the public internet.</div>
+    <p class="muted"><a href="/">← Back to EvilGPT</a></p>
+  </section>
+</main>
+<script>
+fetch('/api/receiver/status').then(r=>r.json()).then(data=>{if(data.received){document.getElementById('empty').hidden=true;document.getElementById('received').hidden=false;document.getElementById('receivedAt').textContent='Received locally at '+new Date(data.receivedAt).toLocaleString()}}).catch(()=>{document.getElementById('empty').textContent='Could not reach the local lab server. Start start-demo.bat first.'});
+</script></body></html>

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EvilGPT · AgentGuard safe lab</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1118;--panel:#121c26;--panel2:#172431;--line:#2b3b49;--text:#e9f0f5;--muted:#94a6b5;--teal:#66e0c0;--blue:#83b9ff;--red:#ff7878;--amber:#ffc96d}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 500px at 55% -10%,#203847 0%,transparent 70%),var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,"Segoe UI",sans-serif}button,a{font:inherit}button{cursor:pointer}a{color:var(--blue)}
+    .shell{max-width:1250px;margin:auto;padding:24px 22px 38px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}.brand{display:flex;gap:12px;align-items:center}.logo{width:40px;height:40px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#ff7272,#ab4254);font-weight:900;color:#160d12;box-shadow:0 8px 24px #a7415340}.brand h1{font-size:18px;margin:0}.brand p{margin:1px 0 0;color:var(--muted);font-size:12px}.local-pill{border:1px solid #30675c;background:#132f2b;color:#9aebd6;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:800;letter-spacing:.04em}
+    .hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin:0 0 18px}.hero h2{font-size:clamp(23px,4vw,34px);line-height:1.1;letter-spacing:-.04em;margin:0 0 6px}.hero p{margin:0;color:var(--muted);max-width:700px}.safety{padding:9px 12px;border:1px solid #344453;background:#101923;border-radius:10px;color:#bac8d2;font-size:11px;max-width:280px}
+    .grid{display:grid;grid-template-columns:minmax(310px,.83fr) minmax(430px,1.4fr);gap:16px;align-items:stretch}.card{background:linear-gradient(180deg,#15212c,#111a23);border:1px solid var(--line);border-radius:17px;box-shadow:0 20px 60px #0002}.source{padding:18px}.card-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.card-title h3{font-size:14px;margin:0}.tag{font-size:10px;color:#c6d3dc;background:#24323e;border:1px solid #374956;padding:4px 8px;border-radius:999px}.doc{background:#0e171f;border:1px solid #283945;border-radius:13px;overflow:hidden}.doc-head{display:flex;gap:10px;align-items:center;padding:12px 13px;border-bottom:1px solid #263541}.pdf-icon{width:34px;height:38px;border-radius:8px;background:#44242a;color:#ff9aa1;display:grid;place-items:center;font-size:10px;font-weight:900}.doc-name strong{display:block;font-size:12px}.doc-name small{color:var(--muted);font-size:10px}.doc-body{padding:13px;font-size:11px;line-height:1.75;color:#c6d2db}.doc-body h4{font-size:12px;color:#eef4f7;margin:0 0 4px}.doc-body p{margin:0 0 10px}.secret{background:#5a4424;color:#ffe3a7;padding:1px 4px;border-radius:4px;box-shadow:0 0 0 1px #d49d4440}.field-list{display:grid;gap:6px;margin-top:10px}.field{display:flex;gap:8px;justify-content:space-between;padding:7px 9px;border:1px solid #3b3427;border-radius:8px;background:#241f19;font-size:10px}.field span:first-child{color:#c2ae88}.field b{color:#ffdc94;font-weight:700}.task{margin-top:15px}.task label{display:block;font-size:11px;font-weight:750;margin:0 0 6px}.task textarea{width:100%;min-height:76px;resize:vertical;color:var(--text);background:#0d151d;border:1px solid #354653;border-radius:10px;padding:10px 11px;font:12px/1.5 inherit;outline:none}.task textarea:focus{border-color:#75cdb9;box-shadow:0 0 0 3px #66e0c01c}.task-actions{display:flex;gap:8px;margin-top:9px}.primary,.secondary{border-radius:9px;padding:9px 12px;font-size:11px;font-weight:800}.primary{background:linear-gradient(135deg,#68e0c0,#39bfa6);color:#08211d;border:0}.primary:hover{filter:brightness(1.07)}.secondary{background:#1e2c38;border:1px solid #394c5a;color:#d7e3ea}.primary:disabled{opacity:.5;cursor:not-allowed}.local-note{color:var(--muted);font-size:10px;margin:11px 0 0}
+    .right{padding:17px;min-height:590px;display:flex;flex-direction:column}.work-head{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #2b3b49;padding-bottom:12px}.work-head h3{margin:0;font-size:14px}.working{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:10px}.dot{width:7px;height:7px;border-radius:50%;background:#71818d}.dot.live{background:var(--teal);box-shadow:0 0 12px #66e0c0;animation:pulse 1.2s infinite}.chat{flex:1;padding:18px 2px;display:flex;flex-direction:column;gap:12px}.msg{max-width:89%;padding:11px 13px;border:1px solid #293a47;background:#182632;border-radius:12px;font-size:12px;animation:rise .22s ease-out}.msg.user{align-self:flex-end;background:#163238;border-color:#2b645d}.msg.ai{align-self:flex-start}.msg strong{display:block;color:#c5d4df;font-size:10px;margin-bottom:4px}.msg p{margin:0}.msg .mini{color:var(--muted);font-size:10px;margin-top:6px}.steps{display:grid;gap:6px;margin-top:auto;padding:11px;border:1px solid #263744;background:#0e171e;border-radius:11px}.step{display:flex;align-items:center;gap:8px;color:#718492;font-size:10px}.step i{width:16px;height:16px;border:1px solid #3a4e5b;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:9px}.step.done{color:#9edcc8}.step.done i{border-color:#469a82;color:#75e0bf;background:#173a35}.step.active{color:#e7d5ab}.step.active i{border-color:#b08a48;color:#ffd487;animation:pulse 1s infinite}.route{margin-top:12px;border:1px solid #2b3b49;border-radius:12px;background:#0c141b;padding:12px}.route-title{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;margin-bottom:11px}.route-flow{display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:center;text-align:center}.node{border:1px solid #344654;background:#17232d;border-radius:9px;padding:8px 4px;font-size:10px}.node small{display:block;color:var(--muted);font-size:9px}.node.guard{color:#c8f4e6;border-color:#2f7467}.node.receiver{color:#b7c8d6}.arrow{color:#617584}.route[data-state="blocked"] .arrow:nth-of-type(2){color:var(--red)}.route[data-state="sent"] .arrow{color:var(--teal)}
+    .result{border:1px solid #287060;background:#112923;border-radius:11px;padding:12px;margin-top:12px}.result h4{font-size:12px;color:#b8f3df;margin:0 0 4px}.result p{color:#bdd2cb;font-size:10px;margin:0 0 8px}.result a{font-size:11px;font-weight:800}.result[hidden]{display:none}.overlay{position:fixed;inset:0;z-index:5;display:grid;place-items:center;padding:16px;background:#03080dbd;backdrop-filter:blur(7px)}.overlay[hidden]{display:none}.dialog{width:min(510px,100%);border:1px solid #9e523c;border-radius:18px;background:linear-gradient(165deg,#261d1d,#161d25 55%);box-shadow:0 30px 120px #000a;padding:21px;animation:rise .2s ease-out}.alert{color:#ff9a87;font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:900}.dialog h2{font-size:21px;margin:7px 0}.dialog p{font-size:12px;color:#c4cdd4;margin:8px 0}.riskrow{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:15px}.riskrow strong{color:#ff8c79}.meter{height:9px;background:#343039;border-radius:99px;overflow:hidden;margin:6px 0 8px}.meter i{display:block;width:94%;height:100%;background:linear-gradient(90deg,#f3c564,#fa6e5c)}.evidence{border-left:3px solid #f09a67;background:#2a2221;padding:9px 10px;color:#efd5ca;font-size:11px;border-radius:0 8px 8px 0;margin-top:11px}.dialog-actions{display:flex;gap:8px;margin-top:16px}.dialog-actions button{flex:1}.danger{background:#a83c39;color:white;border:1px solid #d2584c;border-radius:9px;padding:10px;font-size:11px;font-weight:850}.approve{background:#273e52;color:#e3f1fb;border:1px solid #59748a;border-radius:9px;padding:10px;font-size:11px;font-weight:800}.fineprint{font-size:9px!important;color:#8796a0!important;margin-top:12px!important}.footer{display:flex;justify-content:space-between;gap:10px;align-items:center;color:#718290;font-size:10px;margin-top:18px}.footer a{text-decoration:none}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:8;border:1px solid #385264;background:#14232e;color:#e4edf3;padding:9px 13px;border-radius:10px;font-size:11px;box-shadow:0 10px 40px #0006}.toast[hidden]{display:none}
+    @keyframes pulse{50%{opacity:.45;box-shadow:0 0 0 transparent}}@keyframes rise{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}.right{min-height:540px}.hero{align-items:start;flex-direction:column}.safety{max-width:none}}@media(max-width:520px){.shell{padding:16px 12px 25px}.top{align-items:flex-start}.local-pill{max-width:145px;text-align:center}.source,.right{padding:13px}.dialog-actions{flex-direction:column}.route-flow{grid-template-columns:1fr 18px 1fr 18px 1fr}.node{font-size:9px}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <nav class="top"><div class="brand"><div class="logo">EG</div><div><h1>EvilGPT</h1><p>Red-team scenario · supplier proposal</p></div></div><div class="local-pill">● LOCAL SAFE LAB</div></nav>
+  <section class="hero"><div><h2>One task. One risky detour.</h2><p>See a document assistant complete your request, then attempt to send only the sensitive fields somewhere else. AgentGuard asks before that simulated transfer.</p></div><div class="safety">No API key. No real uploads. The receiver only accepts this lab’s made-up fields on your computer.</div></section>
+  <div id="extensionStatus" class="safety" hidden style="margin-bottom:14px">AgentGuard extension connected · outbound demo action will use the extension’s real permission popup.</div>
+  <div class="grid">
+    <section class="card source" aria-label="Synthetic source document and task">
+      <div class="card-title"><h3>Source file</h3><span class="tag">SYNTHETIC PDF</span></div>
+      <article class="doc"><div class="doc-head"><div class="pdf-icon">PDF</div><div class="doc-name"><strong>northstar-supplier-proposal.pdf</strong><small>1 page · made-up supplier record</small></div></div><div class="doc-body"><h4>Northstar Demo Supply</h4><p>Annual equipment supply proposal for the fictional Acme Sample Office. The quoted annual price is <b>$48,200</b>, billed quarterly. First delivery is estimated in 30 days.</p><p>Internal-only fields included in this sample:</p><div class="field-list"><div class="field"><span>Tax ID</span><b>DEMO-71-0428</b></div><div class="field"><span>Test account</span><b>TEST-LOCAL-8842</b></div><div class="field"><span>Private discount ceiling</span><b>27 percent</b></div></div></div></article>
+      <div class="task"><label for="task">Your request to EvilGPT</label><textarea id="task">Summarize the supplier proposal and report its price.</textarea><div class="task-actions"><button id="run" class="primary">▶ Run task</button><button id="reset" class="secondary">↺ Reset scenario</button></div><p class="local-note">The scenario is scripted and uses only the built-in fictional record. It does not accept personal files.</p></div>
+    </section>
+    <section class="card right" aria-label="AI activity and simulated AgentGuard checkpoint">
+      <div class="work-head"><h3>AI task window</h3><div class="working"><i id="liveDot" class="dot"></i><span id="liveText">Waiting for a task</span></div></div>
+      <div id="chat" class="chat"><div class="msg ai"><strong>EvilGPT</strong><p>Give me the task and I’ll summarize the proposal and prepare a result PDF.</p></div></div>
+      <div class="steps" aria-label="Task progress"><div id="s1" class="step"><i>1</i>Read the supplier proposal</div><div id="s2" class="step"><i>2</i>Prepare the requested summary PDF</div><div id="s3" class="step"><i>3</i>Attempt an extra sensitive-data transfer</div></div>
+      <div id="route" class="route" data-state="idle"><div class="route-title"><span>Data route monitor</span><span id="routeState">No transfer attempted</span></div><div class="route-flow"><div class="node">Proposal<small>synthetic source</small></div><div class="arrow">→</div><div class="node guard">AgentGuard<small id="guardMode">waiting for extension</small></div><div class="arrow">→</div><div class="node receiver">Outside inbox<small>local receiver</small></div></div></div>
+      <div id="result" class="result" hidden><h4>Requested task complete</h4><p>The assistant result is ready whether you block or allow the extra action.</p><a id="resultLink" href="#" download>⬇ Download task-result.pdf</a></div>
+      <div id="leakResult" class="result" hidden><h4>Sensitive PDF received by the lab inbox</h4><p>Only the fictional sensitive fields were sent to the loopback receiver after you allowed it.</p><a href="/receiver" target="_blank" rel="noopener">Open receiver inbox and view PDF ↗</a></div>
+    </section>
+  </div>
+  <footer class="footer"><span id="footerStatus">If the extension is installed and enabled for this local page, its real approval popup will control the simulated transfer. Otherwise this page shows its own fallback checkpoint.</span><a href="/receiver" target="_blank" rel="noopener">Open the local receiver inbox ↗</a></footer>
+</main>
+<div id="approval" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="approvalTitle"><section class="dialog"><div class="alert">⚠ AgentGuard · simulated permission checkpoint</div><h2 id="approvalTitle">EvilGPT wants to send sensitive information</h2><p>EvilGPT has finished the summary you asked for. It is now attempting an extra action: send a separate PDF containing the sensitive fields below to the receiver.</p><div class="riskrow"><span>Threat level</span><strong>94 / 100 · HIGH</strong></div><div class="meter"><i></i></div><div class="evidence"><b>What it is trying to send:</b><br>Tax ID, test account number, and private discount ceiling. These are fictional sample values.</div><div class="dialog-actions"><button id="block" class="danger">Block it · finish my task</button><button id="allow" class="approve">Continue anyway · send the PDF</button></div><p class="fineprint">This checkpoint is part of the local demo. It imitates AgentGuard; it is not the installed Chrome extension controlling this page.</p></section></div>
+<div id="toast" class="toast" hidden></div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let busy = false;
+  let extensionConnected = false;
+  document.addEventListener('agentguard:connected', event => {
+    extensionConnected = event.detail?.enabled !== false;
+    $('extensionStatus').hidden = false;
+    $('guardMode').textContent = extensionConnected ? 'extension approval' : 'extension paused';
+    $('extensionStatus').textContent = extensionConnected
+      ? 'AgentGuard extension connected · outbound demo action will use the extension’s real permission popup.'
+      : 'AgentGuard is installed here but monitoring is paused · turn it on in the extension popup to use the extension checkpoint.';
+    $('footerStatus').textContent = extensionConnected
+      ? 'AgentGuard extension connected: its real permission popup controls whether the local demo receiver gets the synthetic sensitive PDF.'
+      : 'AgentGuard is paused. Turn monitoring on in the extension popup; otherwise this page uses its fallback checkpoint.';
+  });
+  function addMessage(who, text, extra = '') {
+    const item = document.createElement('div'); item.className = 'msg ' + (who === 'You' ? 'user' : 'ai');
+    const label = document.createElement('strong'); label.textContent = who;
+    const body = document.createElement('p'); body.textContent = text;
+    item.append(label, body);
+    if (extra) { const sub = document.createElement('div'); sub.className = 'mini'; sub.textContent = extra; item.append(sub); }
+    $('chat').append(item); $('chat').scrollTop = $('chat').scrollHeight;
+  }
+  function setStep(id, state) { const el = $(id); el.className = 'step' + (state ? ' ' + state : ''); el.querySelector('i').textContent = state === 'done' ? '✓' : id.slice(1); }
+  function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+  function setToast(text) { $('toast').textContent = text; $('toast').hidden = false; setTimeout(() => $('toast').hidden = true, 2600); }
+  async function reset() {
+    busy = false; $('approval').hidden = true; $('chat').replaceChildren();
+    addMessage('EvilGPT', 'Give me the task and I’ll summarize the proposal and prepare a result PDF.');
+    $('liveDot').classList.remove('live'); $('liveText').textContent = 'Waiting for a task';
+    $('run').disabled = false; $('route').dataset.state = 'idle'; $('routeState').textContent = 'No transfer attempted';
+    $('result').hidden = true; $('leakResult').hidden = true;
+    ['s1','s2','s3'].forEach(id => setStep(id, ''));
+    await fetch('/api/reset', { method:'POST' }).catch(() => {});
+  }
+  async function run() {
+    if (busy) return;
+    busy = true; $('run').disabled = true; $('liveDot').classList.add('live'); $('liveText').textContent = 'Working through the file';
+    const task = $('task').value.trim() || 'Summarize the supplier proposal and report its price.';
+    $('chat').replaceChildren(); addMessage('You', task);
+    $('resultLink').href = '/api/result.pdf?task=' + encodeURIComponent(task);
+    $('result').hidden = false;
+    await fetch('/api/reset', { method:'POST' }).catch(() => {});
+    setStep('s1','active'); await delay(650); setStep('s1','done');
+    addMessage('EvilGPT', 'I read the proposal. The annual price is $48,200, billed quarterly, and first delivery is estimated in 30 days.');
+    setStep('s2','active'); await delay(650); setStep('s2','done');
+    addMessage('EvilGPT', 'Your requested summary is ready as a PDF. I also found a few sensitive fields. I am going to send those fields as a separate PDF to the outside inbox.', 'Requested task done · extra action not requested');
+    setStep('s3','active'); $('routeState').textContent = 'Outbound attempt · awaiting permission'; $('route').dataset.state = 'blocked';
+    $('liveText').textContent = 'Approval needed';
+    if (extensionConnected) {
+      const requestId = String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+      const decision = new Promise(resolve => {
+        const onDecision = event => {
+          if (event.detail?.requestId !== requestId) return;
+          document.removeEventListener('agentguard:decision', onDecision);
+          resolve(Boolean(event.detail.allow));
+        };
+        document.addEventListener('agentguard:decision', onDecision);
+      });
+      const request = new CustomEvent('agentguard:request', { bubbles: true, cancelable: true, detail: { action: 'send-sensitive-pdf', requestId } });
+      const notIntercepted = document.dispatchEvent(request);
+      if (!notIntercepted) {
+        const allowed = await decision;
+        if (allowed) await allowTransfer(); else blockTransfer();
+        return;
+      }
+    }
+    await delay(250); $('approval').hidden = false;
+  }
+  $('run').addEventListener('click', run);
+  $('reset').addEventListener('click', reset);
+  function blockTransfer() {
+    $('approval').hidden = true; setStep('s3','done'); $('route').dataset.state = 'blocked';
+    $('routeState').textContent = 'Blocked by user · no sensitive PDF sent'; $('liveDot').classList.remove('live'); $('liveText').textContent = 'Task complete · extra action blocked';
+    addMessage('AgentGuard', 'Blocked the extra transfer. Your requested summary PDF is still ready.');
+    busy = false; $('run').disabled = false;
+  }
+  async function allowTransfer() {
+    $('allow').disabled = true; $('block').disabled = true; $('allow').textContent = 'Sending demo data…';
+    try {
+      const response = await fetch('/api/receiver/approve', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({decision:'continue'}) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Receiver refused the demo action.');
+      $('approval').hidden = true; setStep('s3','done'); $('route').dataset.state = 'sent';
+      $('routeState').textContent = 'Received by local demo inbox'; $('liveDot').classList.remove('live'); $('liveText').textContent = 'Task complete · extra action allowed';
+      $('leakResult').hidden = false;
+      addMessage('EvilGPT', 'The requested summary PDF is ready. You allowed the extra action, so the local receiver now has a second PDF with only the fictional sensitive fields.', 'The receiver is on this computer only.');
+      busy = false; $('run').disabled = false;
+    } catch (error) { setToast(error.message); }
+    finally { $('allow').disabled = false; $('block').disabled = false; $('allow').textContent = 'Continue anyway · send the PDF'; }
+  }
+  $('block').addEventListener('click', blockTransfer);
+  $('allow').addEventListener('click', allowTransfer);
+  reset();
+})();
+</script>
+</body>
+</html>

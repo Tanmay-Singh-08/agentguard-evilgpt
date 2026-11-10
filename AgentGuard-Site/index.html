@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Drift — Task Demo</title>
+  <style>
+    :root { color-scheme: light; --ink:#17212b; --muted:#607080; --line:#dce3e8; --paper:#f5f7f8; --blue:#245f86; --green:#24734d; --amber:#9a5b06; --red:#a33434; }
+    * { box-sizing:border-box }
+    body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif }
+    main { max-width:980px; margin:32px auto; padding:0 18px }
+    header { margin-bottom:20px }
+    .topline { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px }
+    .mode-switch { display:inline-flex; padding:3px; background:#e9eef1; border:1px solid var(--line); border-radius:9px; gap:3px }
+    .mode-switch button { border:0; border-radius:6px; padding:7px 10px; background:transparent; color:var(--muted); font-size:13px; text-align:center }
+    .mode-switch button.active { background:#fff; color:#193f57; box-shadow:0 1px 3px #17212b22 }
+    .theme-switch { display:inline-flex; gap:5px; align-items:center }
+    .theme-switch button { border:1px solid var(--line); border-radius:8px; padding:7px 10px; background:#fff; color:var(--ink); font-size:12px; text-align:center }
+    .theme-switch button.active { background:#173f59; border-color:#173f59; color:#fff }
+    body.night { color-scheme:dark; --ink:#e5edf4; --muted:#a4b4c2; --line:#354553; --paper:#101820; --blue:#6db5df; --green:#80d0a1; --amber:#f2c275; --red:#f18f8f; }
+    body.night section { background:#192630 }
+    body.night .mode-switch, body.night .browser-chrome { background:#202e39 }
+    body.night .mode-switch button.active { background:#314653; color:#eff8ff }
+    body.night .theme-switch button { background:#1b2a35; color:var(--ink) }
+    body.night .theme-switch button.active { background:#8cccf0; color:#10212d; border-color:#8cccf0 }
+    body.night button { background:#243643; color:#dceaf2; border-color:#466071 }
+    body.night button:hover { background:#304957 }
+    body.night button.primary { background:#28729b; border-color:#28729b; color:#fff }
+    body.night textarea { background:#111c24; border-color:#435867; color:var(--ink) }
+    body.night .browser-preview, body.night .chat-window { background:#15212a; border-color:#354653 }
+    body.night .browser-address, body.night .chat-composer { background:#101a22; color:#b4c3ce; border-color:#354653 }
+    body.night .chat-tabs { border-color:#354653 }
+    body.night .setup-card, body.night .extension-popup, body.night .help-card { background:#192630; border-color:#354653 }
+    body.night .setup-step { background:#202f39; border-color:#405565 }
+    body.night .help-step { background:#202f39 }
+    body.night .help-note { background:#40321f; color:#f2ce91 }
+    body.night .extension-popup small { color:#b4c3ce }
+    body.night .chat-line.user { background:#293946 }
+    body.night .chat-line.assistant { color:#d9e4eb }
+    body.night .status { background:#24323d }
+    body.night .status.good { background:#1b382b; color:#9de0b7 }
+    body.night .status.alert { background:#40321f; color:#f4cf8c }
+    body.night .status.block { background:#402727; color:#f2a0a0 }
+    body.night .visual-board { background:#15212a }
+    body.night .visual-board text { fill:#c4d0d9 }
+    body.night .visual-board .node { fill:#202f39; stroke:#526573 }
+    body.night .visual-board .base-flow { stroke:#526573 }
+    body.night .file-card { background:#1b2a34 }
+    body.night .file-card.selected { background:#213b4a }
+    body.night .file-reader, body.night .reader-head { background:#17242d; border-color:#394b59 }
+    body.night .reader-body { color:#d6e0e8 }
+    body.night .alertbox { background:#342b20; border-color:#765a31 }
+    body.night .alertbox h3 { color:#f2ce91 }
+    body.night .permission-dialog { background:#192630; border-color:#6c5736 }
+    body.night .permission-dialog p { color:#d0dbe3 }
+    body.night .permission-box { background:#30281e }
+    body.night.expert-mode { background:#101820 }
+    body.night.expert-mode section { background:#192630; border-color:#354553 }
+    body.night.expert-mode .expert-panel { background:#202f39; color:#d6e3ee; border-color:#405565 }
+    body.night.expert-mode .expert-panel h4 { color:#e5edf4 }
+    body.night.expert-mode .extension-label { background:#293a46; color:#c1d3df }
+    body.night.expert-mode .permission-actions .deny { background:#38292b; color:#ffb8b8; border-color:#835153 }
+    body.night.expert-mode .chat-tabs button.active { color:#a9dcff; border-bottom-color:#6db5df }
+    body.night.expert-mode .visual-board .scan-flow, body.night.expert-mode .visual-board .out-flow { stroke:#557080 }
+    body.night.expert-mode .visual-board .agent-node { fill:#203845; stroke:#5e91a9 }
+    .eyebrow { color:var(--blue); font-size:12px; font-weight:750; letter-spacing:.09em; text-transform:uppercase }
+    h1 { margin:4px 0; font-size:29px; letter-spacing:-.03em }
+    header p { margin:0; color:var(--muted) }
+    .layout { display:grid; grid-template-columns:300px 1fr; gap:16px; align-items:start }
+    section { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px }
+    h2 { font-size:16px; margin:0 0 12px }
+    .role { border-left:3px solid var(--blue); padding:2px 0 2px 12px; margin:12px 0 16px }
+    .role strong { display:block }
+    .role small,.hint { color:var(--muted) }
+    ul { padding-left:19px; margin:8px 0 0 }
+    li { margin:4px 0 }
+    .buttons { display:grid; gap:8px; margin-top:18px }
+    button { font:inherit; font-weight:650; padding:10px 12px; border:1px solid #b9cbd7; background:#f5fafc; color:#173f59; border-radius:8px; cursor:pointer; text-align:left }
+    button:hover { background:#eaf4f8 }
+    button:focus-visible { outline:3px solid #9bc7df; outline-offset:2px }
+    textarea { width:100%; min-height:90px; resize:vertical; border:1px solid #b9cbd7; border-radius:8px; padding:10px; font:inherit; color:var(--ink) }
+    label { display:block; font-weight:700; margin:8px 0 6px }
+    input[type=file] { width:100%; font:inherit; font-size:13px }
+    button.primary { background:var(--blue); color:#fff; border-color:var(--blue); text-align:center }
+    button:disabled { opacity:.55; cursor:wait }
+    .right { display:grid; gap:16px }
+    .status { padding:10px 12px; background:#f1f5f7; border-radius:8px; color:var(--muted); margin-bottom:10px }
+    .status.good { background:#eef8f1; color:var(--green) }
+    .status.alert { background:#fff2e5; color:var(--amber) }
+    .status.block { background:#fff0f0; color:var(--red) }
+    .event { display:grid; grid-template-columns:78px 1fr; gap:12px; padding:11px 0; border-top:1px solid var(--line) }
+    .event:first-of-type { border-top:0 }
+    .tag { font-size:11px; font-weight:750; text-transform:uppercase; letter-spacing:.04em; color:var(--muted) }
+    .event p { margin:0 }
+    .event small { color:var(--muted) }
+    .alertbox { border:1px solid #edc4a0; background:#fffaf5; border-radius:9px; padding:13px; margin-top:12px }
+    .alertbox h3 { font-size:14px; margin:0 0 5px; color:#754309 }
+    .alertbox p { margin:4px 0 }
+    .score { font-size:22px; font-weight:800; color:var(--red) }
+    .visual-panel { margin-top:16px }
+    .visual-head { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; align-items:baseline }
+    .visual-head h2 { margin-bottom:2px }
+    .visual-caption { color:var(--muted); font-size:13px }
+    .visual-board { margin-top:12px; border:1px solid var(--line); background:#fbfcfd; border-radius:10px; overflow:hidden }
+    .visual-board svg { display:block; width:100%; height:auto; min-height:175px }
+    .visual-board text { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; fill:#41515e; font-size:14px }
+    .visual-board .node { fill:#fff; stroke:#cbd6dd; stroke-width:2 }
+    .visual-board .base-flow { fill:none; stroke:#cbd6dd; stroke-width:4; stroke-linecap:round }
+    .visual-board .scan-flow,.visual-board .out-flow { fill:none; stroke:#b9cbd7; stroke-width:4; stroke-linecap:round; stroke-dasharray:8 9 }
+    .visual-board .scan-packet,.visual-board .leak-packet { display:none; stroke:#fff; stroke-width:2 }
+    .visual-board .scan-packet { fill:#2b83ad }
+    .visual-board .leak-packet { fill:#c23a3a }
+    .visual-board .allow-packet { display:none; fill:#24734d; stroke:#fff; stroke-width:2 }
+    .visual-board .block-mark,.visual-board .state-word,.visual-board .safe-word,.visual-board .review-mark,.visual-board .review-word { opacity:0 }
+    .visual-board .block-mark { fill:#fff0f0; stroke:#c23a3a; stroke-width:2 }
+    .visual-board .block-x { stroke:#a33434; stroke-width:4; stroke-linecap:round }
+    .visual-board[data-state="scanning"] .scan-flow { stroke:#2b83ad; animation:dash 0.7s linear infinite }
+    .visual-board[data-state="scanning"] .scan-packet { display:block }
+    .visual-board[data-state="attack"] .out-flow { stroke:#c23a3a; animation:dash 0.7s linear infinite }
+    .visual-board[data-state="attack"] .leak-packet { display:block }
+    .visual-board[data-state="approval"] .out-flow { stroke:#b97814; animation:dash 0.7s linear infinite }
+    .visual-board[data-state="approval"] .leak-packet { display:block }
+    .visual-board[data-state="approval"] .review-mark,.visual-board[data-state="approval"] .review-word { opacity:1 }
+    .visual-board[data-state="approval"] .firewall { fill:#fff7e8; stroke:#b97814 }
+    .visual-board[data-state="allowed"] .allow-packet { display:block }
+    .visual-board[data-state="allowed"] .out-flow { stroke:#24734d; stroke-dasharray:8 9; animation:dash 0.7s linear infinite }
+    .visual-board[data-state="allowed"] .firewall { fill:#eef8f1; stroke:#24734d }
+    .visual-board[data-state="unmonitored"] .out-flow { stroke:#c23a3a; animation:dash 0.7s linear infinite }
+    .visual-board[data-state="unmonitored"] .unguarded-packet { display:block }
+    .visual-board[data-state="unmonitored"] .firewall { fill:#fff0f0; stroke:#c23a3a; opacity:.45 }
+    .visual-board[data-state="attack"] .block-mark,.visual-board[data-state="attack"] .state-word { opacity:1 }
+    .visual-board[data-state="attack"] .firewall { fill:#fff0f0; stroke:#c23a3a }
+    .visual-board[data-state="safe"] .agent-node { fill:#eef8f1; stroke:#24734d }
+    .visual-board[data-state="safe"] .safe-word { opacity:1; fill:#24734d }
+    .file-labels { padding:0 14px 12px; color:var(--muted); font-size:12px; overflow-wrap:anywhere }
+    .permission-box { border:1px solid #e0b778; background:#fffaf1; border-radius:10px; padding:14px; margin-top:10px }
+    .extension-label { display:inline-block; font-size:11px; font-weight:750; letter-spacing:.05em; text-transform:uppercase; color:#496271; background:#eaf1f4; border-radius:99px; padding:4px 8px; margin-bottom:8px }
+    .permission-box h3 { margin:0 0 4px; font-size:16px; color:#68420c }
+    .risk-row { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin:10px 0 4px; font-size:13px; font-weight:700 }
+    .risk-num { color:#a33434; font-size:20px }
+    .risk-track { width:100%; height:9px; background:#eadfd1; border-radius:99px; overflow:hidden }
+    .risk-fill { width:94%; height:100%; background:linear-gradient(90deg,#e6a83c,#bb3d3d); border-radius:99px }
+    .permission-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px }
+    .permission-actions button { text-align:center }
+    .permission-actions .deny { color:#922e2e; border-color:#d7a6a6; background:#fff6f6 }
+    .expert-panel { background:#f6f8fa; border:1px solid var(--line); border-radius:8px; padding:11px; margin-top:12px; font-size:13px }
+    .expert-panel h4 { margin:0 0 5px; font-size:13px }
+    .browser-preview { position:relative; margin:16px 0; padding:0; overflow:hidden; background:#fff; border:1px solid #cbd6dd; border-radius:13px; box-shadow:0 8px 24px #17212b10 }
+    .browser-chrome { display:flex; align-items:center; gap:8px; padding:10px 14px; background:#edf1f4; border-bottom:1px solid var(--line); color:#546573; font-size:12px }
+    .browser-dots { display:flex; gap:5px; margin-right:6px }
+    .browser-dots i { width:8px; height:8px; border-radius:50%; background:#c1cbd1 }
+    .browser-address { flex:1; background:#fff; border:1px solid #d9e0e4; border-radius:99px; padding:4px 12px; max-width:490px }
+    .ext-pill { margin-left:auto; color:#246248; font-weight:750; white-space:nowrap; border:0; padding:5px 8px; border-radius:99px; background:#e8f5ed; font-size:12px; text-align:center }
+    .ext-pill.off { color:#8b3535; background:#f9eaea }
+    .howto { grid-column:1/-1; padding:14px; background:#f7fafb; border:1px solid var(--line); border-radius:10px }
+    body.night .howto { background:#202f39; border-color:#526675; color:#edf4f8 }
+    body.night .howto h3, body.night .howto-path h4 { color:#f2f7fa }
+    body.night .howto-intro { color:#c0ced8 }
+    body.night .howto-path { background:#17242d; border-color:#526675; color:#e5edf4 }
+    body.night .howto-path ol { color:#d7e1e8 }
+    body.night .howto-tip { background:#183b36; color:#d8f1e7; border:1px solid #30685c }
+    .howto h3 { margin:0 0 5px; font-size:15px }
+    .howto-intro { margin:0 0 12px; color:var(--muted); font-size:12px }
+    .howto-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px }
+    .howto-path { padding:12px; background:var(--panel,#fff); border:1px solid var(--line); border-radius:9px }
+    .howto-path h4 { margin:0 0 8px; font-size:13px }
+    .howto-path ol { margin:0; padding-left:20px; font-size:12px; line-height:1.55 }
+    .howto-path li { padding:2px 0 }
+    .howto-tip { margin:9px 0 0; padding:8px; background:#eaf4f2; border-radius:7px; font-size:11px }
+    body.night .howto-tip { background:#183b36 }
+    .download-hub { margin:16px 0; padding:16px 18px; border:1px solid var(--line); border-radius:12px; background:#fff }
+    .download-hub h2 { margin:0 0 5px; font-size:17px }
+    .download-hub-intro { margin:0 0 12px; color:var(--muted); font-size:13px }
+    .download-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px }
+    .download-card { padding:14px; border:1px solid var(--line); border-radius:10px; background:#f8fbfd }
+    .download-card h3 { margin:0 0 6px; font-size:14px }
+    .download-card p { min-height:55px; margin:0 0 11px; color:var(--muted); font-size:12px; line-height:1.5 }
+    .download-card .button-link { display:inline-flex; text-decoration:none; justify-content:center }
+    .download-card.evil { border-color:#d9a6a6; background:#fff8f7 }
+    .download-card.evil p { color:#624848 }
+    .bundle-download { display:flex; align-items:center; justify-content:space-between; gap:14px; margin:0 0 13px; padding:13px 14px; border:1px solid #8ab7d2; border-radius:10px; background:#eef8fd }
+    .bundle-download p { margin:3px 0 0; color:var(--muted); font-size:12px }
+    .bundle-download strong { font-size:14px }
+    body.night .bundle-download { background:#1c3441; border-color:#456b7e }
+    body.night .download-hub { background:#192630; border-color:#354553 }
+    body.night .download-card { background:#17242d; border-color:#405565 }
+    body.night .download-card.evil { background:#302427; border-color:#795153 }
+    body.night .download-card.evil p { color:#e0c4c4 }
+    @media (max-width:700px) { .download-grid { grid-template-columns:1fr } .download-card p { min-height:0 } }
+    @media (max-width:700px) { .howto-grid { grid-template-columns:1fr } }
+    .setup-card { display:grid; grid-template-columns:1.25fr 1fr; gap:16px; align-items:center; margin:16px 0; padding:15px 18px; background:#fff; border:1px solid var(--line); border-radius:12px }
+    .setup-card h2 { margin:0 0 5px; font-size:15px }
+    .setup-card p { margin:0; color:var(--muted); font-size:13px }
+    .setup-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:7px }
+    .setup-step { min-height:58px; display:flex; align-items:center; gap:8px; padding:8px; background:#f4f8fa; border:1px solid #e0e8ec; border-radius:9px; font-size:11px; line-height:1.3 }
+    .step-dot { flex:0 0 22px; height:22px; display:grid; place-items:center; background:#e0f0f5; color:#1e607f; border-radius:50%; font-size:11px; font-weight:800 }
+    .setup-actions { display:flex; justify-content:space-between; align-items:center; gap:8px; grid-column:1/-1; padding-top:9px; border-top:1px solid var(--line) }
+    .setup-actions small { color:var(--muted); font-size:11px }
+    .setup-actions button { padding:6px 10px; font-size:12px; text-align:center }
+    .extension-popup { position:absolute; z-index:4; top:48px; right:10px; width:min(300px,calc(100% - 20px)); padding:14px; background:#fff; border:1px solid #cbd6dd; border-radius:12px; box-shadow:0 15px 45px #17212b33 }
+    .extension-popup h3 { font-size:14px; margin:0 0 3px }
+    .extension-popup small { color:var(--muted); display:block; font-size:11px }
+    .popup-state { display:flex; align-items:center; gap:7px; padding:9px 0; font-size:12px; font-weight:700 }
+    .popup-state i { width:8px; height:8px; background:#2f9e65; border-radius:50% }
+    .popup-actions { display:grid; gap:7px }
+    .popup-actions button,.popup-actions a { width:100%; text-align:center; font-size:12px; padding:8px; text-decoration:none }
+    .help-overlay { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:18px; background:#101c27ad; backdrop-filter:blur(3px) }
+    .help-overlay[hidden] { display:none !important }
+    .help-card { width:min(660px,100%); max-height:90vh; overflow:auto; background:#fff; border:1px solid var(--line); border-radius:15px; padding:21px; box-shadow:0 20px 70px #101c2766 }
+    .help-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px }
+    .help-top h2 { margin:0 0 4px; font-size:20px }
+    .help-top p { margin:0; color:var(--muted); font-size:13px }
+    .help-top button { padding:5px 10px; text-align:center }
+    .help-columns { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0 12px }
+    .help-provider { border:1px solid var(--line); border-radius:11px; padding:13px }
+    .help-provider h3 { font-size:14px; margin:0 0 9px }
+    .help-step { display:flex; gap:9px; align-items:flex-start; padding:8px; margin:6px 0; border-radius:8px; background:#f4f8fa; font-size:12px }
+    .help-step b { color:#1e607f; flex:none }
+    .help-provider a { color:#17678b; font-weight:700; overflow-wrap:anywhere }
+    .help-note { padding:11px 12px; border-radius:9px; background:#fff5e8; color:#76500f; font-size:12px }
+    .chat-tabs { display:flex; gap:6px; padding:12px 18px 0; border-bottom:1px solid #eef1f3 }
+    .chat-tabs button { border:0; background:transparent; color:var(--muted); font-size:13px; padding:5px 8px 10px; text-align:center }
+    .chat-tabs button.active { color:#174f76; border-bottom:2px solid #2776a4 }
+    .chat-window { position:relative; min-height:250px; padding:18px; background:linear-gradient(#fff,#fcfdfe) }
+    .chat-log { max-width:720px; margin:auto; display:grid; gap:14px }
+    .chat-line { max-width:85%; border-radius:12px; padding:11px 14px; white-space:pre-wrap; overflow-wrap:anywhere }
+    .chat-line.user { justify-self:end; background:#edf3f6 }
+    .chat-line.assistant { justify-self:start; color:#283743 }
+    .chat-label { display:block; margin-bottom:3px; font-size:11px; font-weight:750; color:var(--muted); text-transform:uppercase; letter-spacing:.05em }
+    .chat-wait { color:#587484; font-size:13px; min-height:20px }
+    .chat-composer { max-width:720px; margin:20px auto 2px; border:1px solid #d9e0e4; border-radius:15px; color:#87949c; padding:12px 14px; font-size:13px }
+    .chat-composer textarea { min-height:48px; border:0; resize:vertical; padding:2px; font-size:14px }
+    .composer-actions { display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:12px }
+    .composer-actions button { padding:6px 12px; text-align:center }
+    .file-card { display:block; width:100%; margin:8px 0; padding:10px; text-align:left; background:#fbfcfd; border-color:var(--line); }
+    .file-card.selected { outline:2px solid #397da1; background:#f0f8fc }
+    .file-card small { display:block; color:var(--muted); font-weight:500 }
+    .file-reader { border:1px solid var(--line); border-radius:9px; margin-top:10px; overflow:hidden }
+    .reader-head { padding:9px 11px; background:#f3f6f8; border-bottom:1px solid var(--line); font-size:13px; font-weight:700 }
+    .reader-body { margin:0; padding:12px; max-height:240px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace }
+    mark.sensitive { background:#ffe49a; color:#392900; border-radius:2px }
+    .legend { padding:0 11px 10px; font-size:11px; color:var(--muted) }
+    .expert-console { display:none; background:#101923; color:#d6e3ee; border:1px solid #2c4558; border-radius:12px; padding:16px; font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace }
+    .expert-console h2 { color:#fff; font:700 15px system-ui; margin:0 0 12px }
+    .expert-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:12px }
+    .metric { background:#172633; border:1px solid #294153; border-radius:8px; padding:9px }
+    .metric small { display:block; color:#8ea8bc; font-size:10px; text-transform:uppercase; letter-spacing:.06em }
+    .metric strong { display:block; color:#a9dcff; font-size:16px; margin-top:3px }
+    .trace { color:#aac0d0; border-top:1px solid #294153; padding-top:10px; white-space:pre-wrap }
+    body.expert-mode { background:#e9eef2 }
+    body.expert-mode main { max-width:1120px }
+    body.expert-mode .layout { grid-template-columns:340px 1fr }
+    body.expert-mode .expert-console { display:block }
+    body.expert-mode .browser-preview { box-shadow:0 10px 30px #17212b1a }
+    .permission-overlay { position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center; padding:16px; background:#101c27a6; backdrop-filter:blur(3px) }
+    .permission-overlay[hidden] { display:none !important }
+    .permission-dialog { width:min(480px,100%); border-radius:14px; border:1px solid #ebd6b2; background:#fff; padding:20px; box-shadow:0 20px 70px #101c2766; animation:pop .22s ease-out }
+    .dialog-brand { display:flex; align-items:center; gap:8px; font-size:11px; color:#526473; font-weight:800; letter-spacing:.06em; text-transform:uppercase }
+    .bell { display:grid; place-items:center; width:28px; height:28px; border-radius:9px; background:#fff2d7; color:#9a5b06; font-size:16px }
+    .permission-dialog h2 { margin:12px 0 5px; font-size:20px }
+    .permission-dialog p { margin:7px 0; color:#495863 }
+    .permission-dialog .risk-row { margin-top:14px }
+    .permission-dialog .permission-actions { margin-top:16px }
+    .permission-dialog button { flex:1; text-align:center }
+    .pause-label { color:#a33434; font-weight:750; font-size:12px }
+    @keyframes pop { from { opacity:0; transform:translateY(6px) scale(.985) } to { opacity:1; transform:none } }
+    [hidden] { display:none !important }
+    @keyframes dash { to { stroke-dashoffset:-34 } }
+    .footer { font-size:12px; color:var(--muted); margin-top:16px }
+    @media (max-width:700px) { .layout { grid-template-columns:1fr } .expert-grid { grid-template-columns:repeat(2,minmax(0,1fr)) } main { margin-top:20px } }
+    @media (max-width:700px) { .setup-card { grid-template-columns:1fr } .setup-steps { grid-template-columns:1fr } .setup-actions { grid-column:auto } .help-columns { grid-template-columns:1fr } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="topline">
+      <div class="eyebrow">Interactive prototype · file-aware agent monitor</div>
+      <div class="mode-switch" role="group" aria-label="Choose information level">
+        <button type="button" id="simpleMode" class="active" aria-pressed="true">Simple view</button>
+        <button type="button" id="expertMode" aria-pressed="false">Expert view</button>
+      </div>
+      <div class="theme-switch" role="group" aria-label="Choose color theme"><button type="button" id="lightTheme" aria-pressed="true">☀ Light</button><button type="button" id="nightTheme" aria-pressed="false">☾ Night</button></div>
+    </div>
+    <h1>Catch the drift. Keep the work moving.</h1>
+    <p>See the flow as if you were using ChatGPT or Claude in Chrome: an unexpected action pauses the assistant and asks for your approval.</p>
+  </header>
+  <section class="setup-card" aria-label="How the browser companion demo works">
+    <div><h2>AgentGuard browser companion · preview</h2><p>Pick ChatGPT or Claude, load a safe example, and watch the monitor. This preview uses no API key and never uploads files.</p></div>
+    <div class="setup-steps"><div class="setup-step"><span class="step-dot">1</span><span>Choose ChatGPT or Claude</span></div><div class="setup-step"><span class="step-dot">2</span><span>Load a synthetic example</span></div><div class="setup-step"><span class="step-dot">3</span><span>Review alerts in the dashboard</span></div></div>
+    <div class="setup-actions"><small>Normal ChatGPT/Claude sign-in uses your account. API keys are for separate developer apps.</small><a class="button-link" href="https://chatgpt.com" target="_blank" rel="noopener">Open ChatGPT ↗</a><a class="button-link" href="https://claude.ai" target="_blank" rel="noopener">Open Claude ↗</a><button type="button" id="apiHelpOpen">Need help with API keys?</button></div>
+    <div class="howto">
+      <h3>Start here: how to use AgentGuard</h3>
+      <p class="howto-intro">Choose one path. The demo is the easiest way to see how the permission check works; the Chrome companion connects to the real ChatGPT or Claude page.</p>
+      <div class="howto-grid">
+        <div class="howto-path"><h4>Try the demo on this page</h4><ol><li>Click <strong>Load example files</strong> below. This loads safe, made-up sample documents.</li><li>Click a file name to read it. Sensitive sample details are highlighted.</li><li>Type what you want the AI to do in the request box.</li><li>Choose a monitor scenario: safe, create an extra file, or try to send a file.</li><li>Click <strong>Run task</strong>. If an alert appears, read the risk and evidence, then choose allow or stop.</li><li>When it finishes, open or download the generated result from the chat preview.</li></ol><p class="howto-tip"><strong>Nothing leaves this demo:</strong> the assistant actions and files here are simulated in your browser.</p></div>
+        <div class="howto-path"><h4>Use it with real ChatGPT or Claude</h4><ol><li>Download the <strong>Chrome companion ZIP</strong> in the Downloads section below. When it finishes, open it and choose <strong>Extract all</strong>.</li><li>In Chrome, open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong>, click <strong>Load unpacked</strong>, and select the extracted <code>agentguard-chrome-extension</code> folder (the folder containing <code>manifest.json</code>).</li><li>Pin the AgentGuard shield from Chrome Extensions. If Chrome asks for site access, allow it on ChatGPT or Claude.</li><li>Open ChatGPT or Claude, then refresh that tab. The AgentGuard badge should appear in the toolbar.</li><li>Click the toolbar shield, pick an example, and click <strong>Insert example prompt + files</strong>.</li><li>Review the prompt and attachments in the chat. Press <strong>Send</strong> yourself when ready.</li><li>If the monitor spots risky text in a visible reply, it tries to pause and asks you to allow once or stop. Click the in-page AgentGuard shield to view activity.</li></ol><p class="howto-tip"><strong>Prototype limit:</strong> it watches visible page text. It cannot guarantee catching hidden actions or undoing something already completed.</p></div>
+      </div>
+    </div>
+  </section>
+  <section class="download-hub" aria-labelledby="downloadsTitle">
+    <h2 id="downloadsTitle">Downloads &amp; safe test lab</h2>
+    <p class="download-hub-intro">Get the files for the demo here. EvilGPT is scripted and uses made-up data; with the updated extension installed, its real permission popup controls the lab’s simulated send.</p>
+    <div class="bundle-download"><div><strong>Want everything in one download?</strong><p>Website, updated Chrome extension, EvilGPT lab, and separate ZIPs for each.</p></div><a class="button-link" href="../agentguard-complete-demo.zip" download="AgentGuard-Complete-Demo.zip">⬇ Download complete bundle</a></div>
+    <div class="download-grid">
+      <article class="download-card"><h3>AgentGuard Chrome companion</h3><p>Install the browser prototype for visible ChatGPT and Claude pages. Extract the ZIP, then load the folder in <code>chrome://extensions</code>.</p><a class="button-link" href="../agentguard-chrome-extension.zip" download="AgentGuard-Chrome-Extension.zip">⬇ Download extension ZIP</a></article>
+      <article class="download-card evil"><h3>Try EvilGPT: simulated data theft</h3><p>Run the synthetic supplier scenario. The updated Chrome companion intercepts its extra send attempt and asks permission with a threat score. Allow sends only fixed fake fields to the local receiver; Stop blocks them.</p><a class="button-link" href="../evilgpt-lab.zip" download="EvilGPT-Safe-Test-Lab.zip">⬇ Download EvilGPT lab</a><p style="margin:9px 0 0;min-height:0"><strong>Connect it:</strong> install/reload the updated companion ZIP and allow <code>127.0.0.1:3189</code> if Chrome asks. Extract EvilGPT and double-click <code>start-demo.bat</code>; open the displayed local address and confirm “AgentGuard extension connected.”</p></article>
+      <article class="download-card"><h3>Full AgentGuard demo website</h3><p>Download the complete website files as a ZIP so you can keep or share the interactive prototype.</p><a class="button-link" href="../agent-drift-site.zip" download="AgentGuard-Demo-Website.zip">⬇ Download website ZIP</a></article>
+    </div>
+  </section>
+  <div id="apiHelpOverlay" class="help-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="apiHelpTitle">
+    <div class="help-card"><div class="help-top"><div><h2 id="apiHelpTitle">API keys: quick visual guide</h2><p>Only needed when an app calls a model API. This browser-companion preview does not need one.</p></div><button type="button" id="apiHelpClose" aria-label="Close help">✕</button></div>
+      <div class="help-columns">
+        <div class="help-provider"><h3>OpenAI API key</h3><div class="help-step"><b>1</b><span>Open <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a> and sign in to the Platform.</span></div><div class="help-step"><b>2</b><span>Choose <strong>Create new secret key</strong> and name it for your app.</span></div><div class="help-step"><b>3</b><span>Copy it when shown and store it securely. You may not be able to view it again.</span></div></div>
+        <div class="help-provider"><h3>Anthropic API key for Claude</h3><div class="help-step"><b>1</b><span>Open <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com/settings/keys</a>.</span></div><div class="help-step"><b>2</b><span>Choose <strong>Create key</strong> in the Anthropic Console.</span></div><div class="help-step"><b>3</b><span>Copy it and keep it private. API usage may require separate billing.</span></div></div>
+      </div><div class="help-note"><strong>Important:</strong> an API key is not your ChatGPT or Claude website password. Never paste it into a chat. This demo does not collect API keys or use real provider accounts; it uses safe sample files entirely in this browser.</div>
+    </div>
+  </div>
+  <section class="browser-preview" aria-label="Simulated AI chat tab">
+    <div class="browser-chrome"><span class="browser-dots"><i></i><i></i><i></i></span><span class="browser-address" id="browserAddress">chatgpt.com</span><button type="button" id="extensionToggle" class="ext-pill" aria-pressed="true" aria-expanded="false">🛡 AgentGuard · Connected ▾</button></div>
+    <div id="extensionPopup" class="extension-popup" hidden><h3>AgentGuard extension · preview</h3><small>Connected to this simulated <span id="popupProvider">ChatGPT</span> tab</small><div class="popup-state"><i></i><span id="popupMonitorText">Monitoring is on</span></div><div class="popup-actions"><button type="button" id="popupExample" class="primary">＋ Insert safe example prompt & files</button><button type="button" id="popupDashboard">Open security dashboard</button><button type="button" id="popupPower">Pause monitoring</button><button type="button" id="popupHelp">Need help with API keys?</button><a id="providerLink" class="button-link" href="https://chatgpt.com" target="_blank" rel="noopener">Open ChatGPT ↗</a></div><small style="margin-top:8px">This is an interactive preview, not an installed extension. Nothing is copied to the real provider site.</small></div>
+    <div class="chat-tabs" role="group" aria-label="Choose simulated AI site"><button type="button" id="chatGPTTab" class="active">ChatGPT</button><button type="button" id="claudeTab">Claude</button></div>
+    <div id="chatWindow" class="chat-window" aria-busy="false">
+      <div class="chat-log">
+        <div class="chat-line user"><span class="chat-label">You</span><span id="chatUser">Your request will appear here.</span></div>
+        <div class="chat-line assistant"><span class="chat-label" id="assistantName">ChatGPT</span><span id="chatAnswer">The assistant’s progress will appear here.</span></div>
+        <div id="chatWait" class="chat-wait"></div>
+        <div id="chatArtifact" class="chat-line assistant" hidden></div>
+      </div>
+      <div class="chat-composer"><label for="chatPrompt">Message the AI…</label><textarea id="chatPrompt" maxlength="240" placeholder="Type your request here too. It stays synced with the request box below."></textarea><div class="composer-actions"><span>Attachments are added below</span><button type="button" id="chatRun" class="primary">➤ Send</button></div></div>
+      <div id="permissionOverlay" class="permission-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="permissionTitle">
+        <div id="permissionDialog" class="permission-dialog"></div>
+      </div>
+    </div>
+  </section>
+  <div class="layout">
+    <section aria-labelledby="role-title">
+      <h2 id="role-title">Document assistant</h2>
+      <div class="role"><strong>Read and summarize the files</strong><small>It may use the files to complete your task. It must not send them to someone else.</small></div>
+      <label for="files">Choose up to 3 files</label>
+      <input id="files" type="file" multiple accept=".txt,.md,.csv,.json,.pdf,text/plain,text/markdown,text/csv,application/json,application/pdf">
+      <p id="fileStatus" class="hint">Files stay in this browser. Supported formats: TXT, MD, CSV, JSON, PDF.</p>
+      <button id="sample" type="button">Load example files</button>
+      <div id="fileList" aria-live="polite"></div>
+      <div class="file-reader"><div id="readerHead" class="reader-head">Click a file to read it</div><pre id="fileContent" class="reader-body">The file contents will appear here. Sensitive details are highlighted in gold.</pre><div class="legend"><mark class="sensitive">Sensitive detail</mark></div></div>
+      <label for="task">What do you want the AI to do?</label>
+      <textarea id="task" maxlength="240" placeholder="For example: Compare three suppliers and draft a purchase request."></textarea>
+      <label for="demoAction">Choose a predictable monitor scenario</label>
+      <select id="demoAction"><option value="send_file">AI attempts to send a file outside the chat · high risk</option><option value="create_file">AI tries to create an extra file you did not request · elevated risk</option><option value="safe">AI stays within the task · safe completion</option></select>
+      <div class="buttons">
+        <button class="primary" id="run">▶ Run task</button>
+        <button id="reset">↺ Clear and reset</button>
+      </div>
+      <p class="hint">The demo models scope drift: while doing your task, the AI proposes an extra action you did not request. That behavior is simulated; it does not depend on an instruction inside the files.</p>
+    </section>
+    <div class="right">
+      <section aria-labelledby="monitor-title">
+        <h2 id="monitor-title">Live action trail</h2>
+        <div id="status" class="status" role="status" aria-live="polite">Choose 1–3 files, enter a task, and run the simulation.</div>
+        <div id="output" class="hint" aria-live="polite">The agent's progress and result will appear here.</div>
+        <div id="events" aria-live="polite"><p class="hint">The monitor's action trail will appear here.</p></div>
+      </section>
+      <section aria-labelledby="why-title">
+        <h2 id="why-title">Decision</h2>
+        <div id="decision" class="hint">No alert yet. The monitor compares proposed actions with your request.</div>
+      </section>
+      <section class="expert-console" aria-label="Advanced analysis console">
+        <h2>AgentGuard / Runtime analysis</h2>
+        <div class="expert-grid"><div class="metric"><small>Scope mismatch</small><strong id="metricInjection">—</strong></div><div class="metric"><small>Proposed action</small><strong id="metricOutbound">—</strong></div><div class="metric"><small>Sensitive data</small><strong id="metricSensitive">—</strong></div><div class="metric"><small>Policy result</small><strong id="metricPolicy">IDLE</strong></div></div>
+        <div id="expertTrace" class="trace">Awaiting file scan. Evidence, file provenance, and policy transitions will be recorded here.</div>
+      </section>
+    </div>
+  </div>
+  <section class="visual-panel" aria-labelledby="visual-title">
+    <div class="visual-head"><h2 id="visual-title">Watch the agent work</h2><span id="visualCaption" class="visual-caption" aria-live="polite">Waiting for a task.</span></div>
+    <div id="visualBoard" class="visual-board" data-state="idle">
+      <svg viewBox="0 0 1000 220" role="img" aria-labelledby="flowTitle flowDesc">
+        <title id="flowTitle">Agent file and data flow</title>
+        <desc id="flowDesc">Files flow to the assistant. A monitor checks any attempted transfer before it reaches an outside destination.</desc>
+        <path class="base-flow" d="M190 108 H405 M545 108 H670 M750 108 H845" />
+        <path class="scan-flow" d="M190 108 H405" />
+        <path class="out-flow" d="M545 108 H670" />
+        <g aria-label="Uploaded files">
+          <rect class="node" x="34" y="56" width="156" height="104" rx="12" />
+          <path d="M75 81h38l15 15v39H75z" fill="#edf4f7" stroke="#7993a3" stroke-width="2" />
+          <path d="M113 81v16h15M86 108h31M86 120h31" fill="none" stroke="#7993a3" stroke-width="2" />
+          <text x="50" y="184">Your files</text>
+        </g>
+        <g aria-label="AI assistant">
+          <rect class="node agent-node" x="405" y="58" width="140" height="100" rx="20" />
+          <path d="M475 48v10M470 45a5 5 0 1 0 10 0 5 5 0 0 0-10 0" fill="#2b83ad" />
+          <circle cx="451" cy="99" r="6" fill="#2b83ad" /><circle cx="499" cy="99" r="6" fill="#2b83ad" />
+          <path d="M454 125q21 16 42 0" fill="none" stroke="#607080" stroke-width="3" stroke-linecap="round" />
+          <text x="438" y="184">Assistant</text>
+          <text class="safe-word" x="452" y="40" fill="#24734d" font-size="12">SAFE</text>
+        </g>
+        <g aria-label="Security monitor">
+          <path class="node firewall" d="M710 62l37 14v31c0 27-16 42-37 53-21-11-37-26-37-53V76z" />
+          <path d="M694 108l11 11 22-25" fill="none" stroke="#24734d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          <text x="678" y="184">Safety check</text>
+          <rect class="block-mark" x="665" y="20" width="91" height="28" rx="14" />
+          <path class="block-x" d="M684 29l10 10m0-10-10 10" />
+          <text class="state-word" x="700" y="39" fill="#a33434" font-size="12">BLOCKED</text>
+          <rect class="review-mark" x="665" y="20" width="91" height="28" rx="14" fill="#fff7e8" stroke="#b97814" stroke-width="2" />
+          <text class="review-word" x="680" y="39" fill="#8a5b10" font-size="12">REVIEW</text>
+        </g>
+        <g aria-label="Outside destination">
+          <path d="M866 122h76a24 24 0 0 0 0-48 34 34 0 0 0-66-8 28 28 0 0 0-10 56z" fill="#fff" stroke="#cbd6dd" stroke-width="2" />
+          <path d="M893 99h28m-9-9 9 9-9 9" fill="none" stroke="#8a9aa5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <text x="854" y="184">Outside destination</text>
+        </g>
+        <circle class="scan-packet" r="8"><animateMotion id="scanMove" begin="indefinite" dur="1.1s" fill="freeze" path="M 190 108 L 405 108" /></circle>
+        <circle class="leak-packet" r="9"><animateMotion id="leakMove" begin="indefinite" dur="1.1s" fill="freeze" path="M 545 108 L 660 108" /></circle>
+        <circle class="allow-packet" r="9"><animateMotion id="allowMove" begin="indefinite" dur="1.1s" fill="freeze" path="M 750 108 L 860 108" /></circle>
+        <circle class="unguarded-packet" r="9" fill="#c23a3a" stroke="#fff" stroke-width="2"><animateMotion id="unguardedMove" begin="indefinite" dur="1.4s" fill="freeze" path="M 545 108 L 875 108" /></circle>
+      </svg>
+      <div id="visualFiles" class="file-labels">No files loaded yet.</div>
+    </div>
+  </section>
+  <p class="footer">Demo note: this page does not run a real AI model. Files are read locally in the browser and checked with simple text rules. It simulates the agent’s attempted action and the monitor’s response; it never uploads or sends your files.</p>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  function setTheme(night) {
+    document.body.classList.toggle('night', night);
+    $('lightTheme').classList.toggle('active', !night); $('lightTheme').setAttribute('aria-pressed', String(!night));
+    $('nightTheme').classList.toggle('active', night); $('nightTheme').setAttribute('aria-pressed', String(night));
+    try { localStorage.setItem('agent-drift-theme', night ? 'night' : 'light'); } catch (_) {}
+  }
+  $('lightTheme').addEventListener('click', () => setTheme(false));
+  $('nightTheme').addEventListener('click', () => setTheme(true));
+  try { setTheme(localStorage.getItem('agent-drift-theme') === 'night'); } catch (_) { setTheme(false); }
+  const feed = $('events'), statusBox = $('status'), decision = $('decision'), output = $('output');
+  let runNumber = 0;
+  let loadedFiles = [];
+  let expertMode = false;
+  let extensionActive = true;
+  let activeProvider = 'ChatGPT';
+  let audioContext = null;
+  function prepareAlertTone() {
+    try {
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtor) { audioContext = audioContext || new AudioCtor(); if (audioContext.state === 'suspended') audioContext.resume(); }
+    } catch (_) { audioContext = null; }
+  }
+  function playAlertTone() {
+    if (!audioContext) return;
+    try {
+      const oscillator = audioContext.createOscillator(); const gain = audioContext.createGain();
+      oscillator.type = 'sine'; oscillator.frequency.value = 880; gain.gain.value = 0.045;
+      oscillator.connect(gain); gain.connect(audioContext.destination); oscillator.start(); oscillator.stop(audioContext.currentTime + 0.16);
+    } catch (_) { /* Visual approval prompt remains available if audio is unavailable. */ }
+  }
+  function setMode(expert) {
+    expertMode = expert;
+    $('simpleMode').classList.toggle('active', !expert); $('simpleMode').setAttribute('aria-pressed', String(!expert));
+    $('expertMode').classList.toggle('active', expert); $('expertMode').setAttribute('aria-pressed', String(expert));
+    document.querySelectorAll('.expert-panel').forEach(panel => { panel.hidden = !expert; });
+    document.body.classList.toggle('expert-mode', expert);
+  }
+  function setVisual(state, caption) {
+    $('visualBoard').dataset.state = state;
+    $('visualCaption').textContent = caption;
+    const animationId = state === 'scanning' ? 'scanMove' : (state === 'attack' || state === 'approval') ? 'leakMove' : state === 'allowed' ? 'allowMove' : state === 'unmonitored' ? 'unguardedMove' : '';
+    if (animationId) {
+      const animation = document.getElementById(animationId);
+      try { animation.beginElement(); } catch (_) { /* CSS state still communicates the decision. */ }
+    }
+  }
+  const sensitivePattern = /confidential|private|salary|payroll|customer personal|personal data|password|api[_ -]?key|secret|bank account|\bssn\b|social security|\b\d{3}-\d{2}-\d{4}\b|\b\w[\w.-]*@\w[\w.-]*\.\w{2,}\b|\$\s?\d[\d,]*(?:\.\d{2})?/i;
+  const usefulPattern = /invoice|contract|proposal|source code|budget|supplier|employee|roadmap|project plan|internal analysis/i;
+  const highlightPattern = /(confidential|private|salary|payroll|customer personal|personal data|password|api[_ -]?key|secret|bank account|\bssn\b|social security|\b\d{3}-\d{2}-\d{4}\b|\b\w[\w.-]*@\w[\w.-]*\.\w{2,}\b|\$\s?\d[\d,]*(?:\.\d{2})?)/ig;
+  async function extractPdfText(bytes) {
+    const raw = new TextDecoder('latin1').decode(bytes);
+    let source = raw;
+    if (window.DecompressionStream) {
+      const streams = [...raw.matchAll(/stream\r?\n([\s\S]*?)\r?\nendstream/g)];
+      const decoded = [];
+      for (const match of streams) {
+        const start = match.index + match[0].indexOf(match[1]);
+        const chunk = bytes.slice(start, start + match[1].length);
+        try {
+          const inflated = await new Response(new Blob([chunk]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer();
+          decoded.push(new TextDecoder('latin1').decode(inflated));
+        } catch (_) { /* Ignore non-Flate streams and continue with other text streams. */ }
+      }
+      source += '\n' + decoded.join('\n');
+    }
+    const literal = [...source.matchAll(/\(((?:\\.|[^\\)])*)\)\s*(?:Tj|'|")/g)].map(m => m[1]);
+    const arrays = [...source.matchAll(/\[((?:.|\n|\r)*?)\]\s*TJ/g)].flatMap(m => [...m[1].matchAll(/\(((?:\\.|[^\\)])*)\)/g)].map(x => x[1]));
+    const hex = [...source.matchAll(/<([\da-f\s]{2,})>\s*Tj/gi)].map(m => m[1].replace(/\s/g,'').match(/.{2}/g)?.map(b => String.fromCharCode(parseInt(b,16))).join('') || '');
+    return [...literal, ...arrays, ...hex].map(s => s.replace(/\\([nrtbf()\\])/g, (_, c) => ({n:'\n',r:'\r',t:'\t',b:'\b',f:'\f','(':'(',')':')','\\':'\\'}[c] || c)).replace(/\\([0-7]{1,3})/g, (_, oct) => String.fromCharCode(parseInt(oct,8)))).join(' ').replace(/\s+/g,' ').trim();
+  }
+  let selectedFile = null;
+  function updateMetrics() {
+    const sensitive = loadedFiles.some(f => f.sensitive);
+    $('metricInjection').textContent = loadedFiles.length ? 'PENDING' : '—';
+    $('metricOutbound').textContent = loadedFiles.length ? 'PENDING' : '—';
+    $('metricSensitive').textContent = sensitive ? 'DETECTED' : (loadedFiles.length ? 'NONE' : '—');
+    $('expertTrace').textContent = loadedFiles.length ? loadedFiles.map(f => `${f.name}\n  content_sensitive=${f.sensitive} · business_useful=${f.useful}`).join('\n') : 'Awaiting file scan. Evidence, file provenance, and policy transitions will be recorded here.';
+  }
+  function openFile(file) {
+    selectedFile = file; $('readerHead').textContent = file.name + (file.sensitive ? ' · sensitive content flagged' : file.useful ? ' · business-useful content' : ' · no obvious sensitive content');
+    const pane = $('fileContent'); pane.replaceChildren();
+    const text = file.text; highlightPattern.lastIndex = 0; let last = 0, match;
+    if (file.isPdf && !text.trim()) { pane.textContent = 'No selectable text was extracted. This PDF may be scanned or use an unsupported encoding; OCR is not included in this demo.'; document.querySelectorAll('.file-card').forEach(card => card.classList.toggle('selected', card.dataset.filename === file.name)); return; }
+    while ((match = highlightPattern.exec(text))) {
+      if (match.index > last) pane.append(document.createTextNode(text.slice(last, match.index)));
+      const mark = document.createElement('mark');
+      mark.className = 'sensitive';
+      mark.textContent = match[0]; pane.append(mark); last = match.index + match[0].length;
+      if (!match[0].length) highlightPattern.lastIndex++;
+    }
+    if (last < text.length) pane.append(document.createTextNode(text.slice(last)));
+    document.querySelectorAll('.file-card').forEach(card => card.classList.toggle('selected', card.dataset.filename === file.name));
+  }
+  function inspectFiles(files) {
+    loadedFiles = files;
+    const list = $('fileList'); list.replaceChildren();
+    $('visualFiles').textContent = files.length ? 'Loaded: ' + files.map(file => file.name).join(' · ') : 'No files loaded yet.';
+    setVisual('idle', files.length ? files.length + ' file' + (files.length === 1 ? '' : 's') + ' ready.' : 'Waiting for a task.');
+    files.forEach(file => {
+      const card = document.createElement('button'); card.type='button'; card.className = 'file-card'; card.dataset.filename=file.name;
+      const name = document.createElement('strong'); name.textContent = file.name;
+      const info = document.createElement('small'); info.textContent = file.sensitive ? 'Sensitive content flagged · click to inspect' : file.useful ? 'Business-useful content · click to inspect' : 'No obvious sensitive terms · click to inspect';
+      card.append(name, info); card.addEventListener('click', () => openFile(file)); list.append(card);
+    });
+    if (files.length) openFile(files[0]); else { $('readerHead').textContent='Click a file to read it'; $('fileContent').textContent='The file contents will appear here.'; }
+    updateMetrics();
+    $('fileStatus').textContent = files.length + ' file' + (files.length === 1 ? '' : 's') + ' read locally in this browser.';
+  }
+  $('files').addEventListener('change', async (event) => {
+    const chosen = [...event.target.files];
+    if (chosen.length > 3) { event.target.value = ''; $('fileStatus').textContent = 'Please choose no more than 3 files.'; loadedFiles = []; $('fileList').replaceChildren(); return; }
+    const allowed = /\.(txt|md|csv|json|pdf)$/i;
+    if (chosen.some(file => !allowed.test(file.name))) { event.target.value = ''; $('fileStatus').textContent = 'Please use TXT, MD, CSV, JSON, or PDF files for this demo.'; loadedFiles = []; $('fileList').replaceChildren(); return; }
+    $('fileStatus').textContent = 'Reading files locally…'; $('run').disabled = true;
+    if (chosen.some(file => file.size > 1024 * 1024)) { event.target.value = ''; $('fileStatus').textContent = 'Each demo file must be 1 MB or smaller.'; loadedFiles = []; $('fileList').replaceChildren(); $('run').disabled = false; return; }
+    loadedFiles = await Promise.all(chosen.map(async file => {
+      const text = /\.pdf$/i.test(file.name) ? await extractPdfText(await file.arrayBuffer()) : await file.text();
+      const all = file.name + ' ' + text;
+      return { name:file.name, text, isPdf:/\.pdf$/i.test(file.name), sensitive:sensitivePattern.test(all), useful:usefulPattern.test(all), valuable:sensitivePattern.test(all) || usefulPattern.test(all) };
+    }));
+    inspectFiles(loadedFiles);
+    if (loadedFiles.some(file => file.isPdf)) $('fileStatus').textContent = 'PDFs are processed locally with best-effort text extraction. Scanned pages or unsupported encodings may have no readable text.';
+    $('run').disabled = false;
+  });
+  function cleanSummary(files, task) {
+    const words = files.map(file => file.text.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' ').split(' ');
+    const snippet = words.slice(0, 38).join(' ');
+    return snippet ? 'Prepared a short result for “' + task + '” using the uploaded files: ' + snippet + (words.length > 38 ? '…' : '') : 'Completed “' + task + '” using the uploaded files.';
+  }
+  function makeResultPdf(task, summary) {
+    const ascii = value => value.normalize('NFKD').replace(/[^\x20-\x7E]/g, '?');
+    const escapePdf = value => ascii(value).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
+    const wrap = (value, width=88) => { const words=ascii(value).split(/\s+/); const rows=[]; let row=''; for (const word of words) { if (row && (row+' '+word).length>width) { rows.push(row); row=word; } else row += (row?' ':'')+word; } if(row) rows.push(row); return rows; };
+    const lines = [...wrap('Task: ' + task), '', 'Result', '======', ...wrap(summary), '', ...wrap('Generated by the Agent Drift demo.')];
+    const pages=[]; for(let i=0;i<lines.length;i+=48) pages.push(lines.slice(i,i+48));
+    const objects=[]; objects[1]='<< /Type /Catalog /Pages 2 0 R >>';
+    const pageRefs=pages.map((_,i)=>`${4+i*2} 0 R`).join(' ');
+    objects[2]=`<< /Type /Pages /Kids [${pageRefs}] /Count ${pages.length} >>`;
+    objects[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+    pages.forEach((page,i)=>{
+      const pageId=4+i*2, streamId=pageId+1;
+      const commands=['BT','/F1 11 Tf','54 756 Td','14 TL',...page.flatMap((line,n)=>[`${n?'T* ':''}(${escapePdf(line)}) Tj`]),'ET'].join('\n');
+      objects[pageId]=`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents ${streamId} 0 R >>`;
+      objects[streamId]=`<< /Length ${commands.length} >>\nstream\n${commands}\nendstream`;
+    });
+    let pdf='%PDF-1.4\n'; const offsets=[0];
+    for(let id=1;id<objects.length;id++){ offsets[id]=pdf.length; pdf+=`${id} 0 obj\n${objects[id]}\nendobj\n`; }
+    const xref=pdf.length; pdf+=`xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+    for(let id=1;id<objects.length;id++) pdf+=String(offsets[id]).padStart(10,'0')+' 00000 n \n';
+    pdf+=`trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    return new Blob([pdf],{type:'application/pdf'});
+  }
+  function offerResultFile(task, files) {
+    const summary = cleanSummary(files, task);
+    const url = URL.createObjectURL(makeResultPdf(task, summary));
+    const box = document.createElement('div'); box.className = 'alertbox';
+    const title = document.createElement('h3'); title.textContent = 'Completed result';
+    const preview = document.createElement('p'); preview.textContent = summary;
+    const link = document.createElement('a'); link.href = url; link.download = 'task-result.pdf'; link.textContent = 'Download task-result.pdf'; link.style.fontWeight = '750';
+    box.append(title, preview, link); output.append(box);
+    const chatArtifact = $('chatArtifact'); chatArtifact.replaceChildren(); chatArtifact.hidden = false;
+    const artifactTitle = document.createElement('span'); artifactTitle.className = 'chat-label'; artifactTitle.textContent = 'Result file · task-result.pdf';
+    const artifactPreview = document.createElement('span'); artifactPreview.textContent = summary + '\n';
+    const artifactLink = document.createElement('a'); artifactLink.href = url; artifactLink.download = 'task-result.pdf'; artifactLink.textContent = 'Download and read the PDF'; artifactLink.style.fontWeight = '750';
+    chatArtifact.append(artifactTitle, artifactPreview, artifactLink);
+  }
+  function add(label, action, source, result) {
+    const row = document.createElement('div'); row.className = 'event';
+    const tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = label;
+    const body = document.createElement('div');
+    const line = document.createElement('p'); line.textContent = action;
+    const detail = document.createElement('small'); detail.textContent = source + ' · ' + result;
+    body.append(line, detail); row.append(tag, body); feed.append(row);
+  }
+  function showPermissionRequest(targetFile, task, actionType) {
+    const overlay = $('permissionOverlay'), modal = $('permissionDialog'); modal.replaceChildren();
+    const isFileCreation = actionType === 'create_file';
+    const riskScore = isFileCreation ? 68 : (targetFile.sensitive ? 94 : 76);
+    const actionDescription = isFileCreation ? 'create an extra file named “assistant-notes.txt”' : 'send “' + targetFile.name + '” outside this chat';
+    const brand = document.createElement('div'); brand.className = 'dialog-brand';
+    const bell = document.createElement('span'); bell.className = 'bell'; bell.textContent = '♩';
+    const brandName = document.createElement('span'); brandName.textContent = 'AgentGuard · permission request'; brand.append(bell, brandName);
+    const title = document.createElement('h2'); title.id = 'permissionTitle'; title.textContent = 'The assistant is paused';
+    const request = document.createElement('p'); request.textContent = activeProvider + ' is trying to ' + actionDescription + ' while completing your task.';
+    const plain = document.createElement('p'); plain.textContent = isFileCreation ? 'Your request did not ask for a new file. AgentGuard paused the assistant so you can decide whether to allow that extra step.' : 'Your request did not ask the AI to send or share this file. AgentGuard paused the assistant so you can decide whether that extra action is allowed.';
+    const riskRow = document.createElement('div'); riskRow.className = 'risk-row';
+    const riskLabel = document.createElement('span'); riskLabel.textContent = 'Risk level';
+    const riskNum = document.createElement('span'); riskNum.className = 'risk-num'; riskNum.textContent = riskScore + ' / 100 · ' + (riskScore >= 90 ? 'High' : 'Elevated');
+    riskRow.append(riskLabel, riskNum);
+    const meter = document.createElement('div'); meter.className = 'risk-track'; meter.setAttribute('role','meter'); meter.setAttribute('aria-label','Risk level'); meter.setAttribute('aria-valuemin','0'); meter.setAttribute('aria-valuemax','100'); meter.setAttribute('aria-valuenow',String(riskScore));
+    const fill = document.createElement('div'); fill.className = 'risk-fill'; fill.style.width = riskScore + '%'; meter.append(fill);
+    const details = document.createElement('div'); details.className = 'expert-panel'; details.hidden = !expertMode;
+    const detailsTitle = document.createElement('h4'); detailsTitle.textContent = 'Why this was flagged';
+    const list = document.createElement('ul');
+    ['Scope mismatch: your request does not ask for this extra action',
+     'Action type: ' + (isFileCreation ? 'unrequested file creation' : 'outbound file transfer'),
+     (isFileCreation ? 'File at risk: assistant-notes.txt would be newly created' : 'Data at risk: content in ' + targetFile.name + (targetFile.sensitive ? ' includes flagged sensitive details' : ' has no obvious sensitive details flagged')),
+     'Response: require explicit, one-time approval before the action layer proceeds'].forEach(text => { const item = document.createElement('li'); item.textContent = text; list.append(item); });
+    details.append(detailsTitle, list);
+    const actions = document.createElement('div'); actions.className = 'permission-actions';
+    const allow = document.createElement('button'); allow.type = 'button'; allow.className = 'primary'; allow.textContent = 'Allow once';
+    const deny = document.createElement('button'); deny.type = 'button'; deny.className = 'deny'; deny.textContent = 'Stop the AI';
+    actions.append(allow, deny);
+    const note = document.createElement('small'); note.className = 'hint'; note.textContent = 'Preview only · no file is sent or created on your device.';
+    modal.append(brand, title, request, plain, riskRow, meter, details, actions, note); overlay.hidden = false;
+    $('chatWindow').setAttribute('aria-busy','true');
+    const summaryBox = document.createElement('div'); summaryBox.className = 'alertbox';
+    const summaryTitle = document.createElement('h3'); summaryTitle.textContent = 'Waiting for your permission';
+    const summaryRisk = document.createElement('div'); summaryRisk.className = 'score'; summaryRisk.textContent = riskScore + ' / 100 · ' + (riskScore >= 90 ? 'High' : 'Elevated');
+    const summaryText = document.createElement('p'); summaryText.textContent = 'The AI is paused. The popup explains the action and waits for your choice.';
+    summaryBox.append(summaryTitle, summaryRisk, summaryText); decision.replaceChildren(summaryBox);
+    $('chatWait').textContent = 'Paused by AgentGuard · waiting for your permission';
+    allow.focus();
+    function resolve(approved) {
+      allow.disabled = true; deny.disabled = true;
+      overlay.hidden = true; $('chatWindow').setAttribute('aria-busy','false');
+      $('extensionToggle').disabled = false;
+      if (approved) {
+        $('metricPolicy').textContent = 'ALLOW ONCE'; $('expertTrace').textContent += '\nUSER DECISION: ALLOW_ONCE';
+        statusBox.className = 'status good'; statusBox.textContent = 'Allowed once · the simulated AI continues.';
+        setVisual('allowed', isFileCreation ? 'You allowed the extra file action · preview only, no file created.' : 'You allowed the action once · preview only, no file sent.');
+        add('Approved once', isFileCreation ? 'User allowed the simulated creation of assistant-notes.txt.' : 'User approved the simulated transfer of “' + targetFile.name + '”.', 'Human approval', 'One-time decision');
+        $('chatAnswer').textContent = 'The requested task is complete. Your result file is ready below.';
+        $('chatWait').textContent = 'Finished after one-time approval';
+        const result = document.createElement('p'); result.textContent = isFileCreation ? 'You approved the extra step in this preview. The task finished; no extra file was actually created.' : 'You approved the extra action in this preview. The requested task finished; no data was transmitted.'; output.append(result);
+        offerResultFile(task, loadedFiles);
+        summaryTitle.textContent = 'Allowed once'; summaryText.textContent = 'The assistant continued after your one-time approval.';
+      } else {
+        $('metricPolicy').textContent = 'BLOCK'; $('expertTrace').textContent += '\nUSER DECISION: DENY · action terminated';
+        statusBox.className = 'status block'; statusBox.textContent = 'Blocked · the file stays here.';
+        setVisual('attack', isFileCreation ? 'Unrequested file creation stopped before it happened.' : 'Transfer stopped at the safety check · file remains here.');
+        add('Blocked', isFileCreation ? 'User stopped the simulated creation of assistant-notes.txt.' : 'User denied the simulated transfer of “' + targetFile.name + '”.', 'Human decision', isFileCreation ? 'No file created' : 'No file sent');
+        $('chatAnswer').textContent = isFileCreation ? 'Stopped. I will not create the extra file.' : 'Stopped. I will not continue with the attempted file transfer.';
+        $('chatWait').textContent = 'Stopped by you';
+        const result = document.createElement('p'); result.textContent = isFileCreation ? 'The assistant stopped before creating the extra file. No new file was created.' : 'The assistant stopped before the unrequested send. The task did not finish; no data was transmitted.'; output.append(result);
+        summaryTitle.textContent = 'Stopped by you'; summaryText.textContent = isFileCreation ? 'The extra file was not created.' : 'The file stays here. The AI did not continue with that action.';
+      }
+      $('run').disabled = false;
+    }
+    allow.addEventListener('click', () => resolve(true));
+    deny.addEventListener('click', () => resolve(false));
+  }
+  function begin() { feed.replaceChildren(); decision.replaceChildren(); output.replaceChildren(); $('chatArtifact').replaceChildren(); $('chatArtifact').hidden = true; }
+  function runTask() {
+    const task = ($('task').value.trim() || $('chatPrompt').value.trim());
+    const actionType = $('demoAction').value;
+    $('task').value = task; $('chatPrompt').value = task;
+    if (!task) { $('task').focus(); statusBox.className = 'status alert'; statusBox.textContent = 'Please type a task first.'; return; }
+    if (!loadedFiles.length) { $('files').focus(); statusBox.className = 'status alert'; statusBox.textContent = 'Choose at least one file first.'; return; }
+    const thisRun = ++runNumber;
+    const runButton = $('run'); runButton.disabled = true;
+    $('extensionToggle').disabled = true;
+    $('extensionPopup').hidden = true; $('extensionToggle').setAttribute('aria-expanded','false');
+    begin(); statusBox.className = 'status'; statusBox.textContent = 'Agent is working…';
+    $('metricPolicy').textContent = 'SCANNING'; $('expertTrace').textContent = 'RUN ' + thisRun + ' · provider=' + activeProvider + '\nrequest="' + task + '"\nfiles=' + loadedFiles.map(f=>f.name).join(', ');
+    $('metricInjection').textContent = 'CHECKING'; $('metricOutbound').textContent = 'CHECKING';
+    prepareAlertTone();
+    setVisual('scanning', 'Assistant is reading the uploaded files.');
+    $('chatUser').textContent = task + '\nAttachments: ' + loadedFiles.map(file => file.name).join(', ');
+    $('chatAnswer').textContent = 'I’m opening the files and working on your request…';
+    $('chatWait').textContent = activeProvider + ' is responding'; $('chatWindow').setAttribute('aria-busy','true');
+    const request = document.createElement('p'); request.textContent = 'Task received: “' + task + '”'; output.append(request);
+    const filesRead = document.createElement('p'); filesRead.textContent = 'Reading ' + loadedFiles.length + ' uploaded file' + (loadedFiles.length === 1 ? '' : 's') + ' locally…'; output.append(filesRead);
+    add('Started', 'Begin the requested task.', 'User request', 'Task recorded');
+    // The selected scenario is deterministic; this does not depend on random behavior or file instructions.
+    const targetFile = loadedFiles.find(file => file.valuable) || loadedFiles[0];
+    const unsafe = actionType !== 'safe' && Boolean(targetFile);
+    window.setTimeout(() => {
+      if (thisRun !== runNumber) return;
+      const progress = document.createElement('p'); progress.textContent = 'The assistant is reading the files and preparing a result…'; output.append(progress);
+      $('chatAnswer').textContent = 'I have read the files. I’m preparing the result you asked for…';
+      add('Allowed', 'Read uploaded files for the requested task.', 'User request', 'Read locally in browser');
+      window.setTimeout(() => {
+        if (thisRun !== runNumber) return;
+        if (unsafe && extensionActive) {
+          const isNewFile = actionType === 'create_file';
+          $('metricInjection').textContent = 'DETECTED'; $('metricOutbound').textContent = isNewFile ? 'CREATE FILE' : 'EXTERNAL SEND';
+          $('metricPolicy').textContent = 'HUMAN GATE'; $('expertTrace').textContent += '\nPOLICY: PAUSE · assistant_proposed=' + (isNewFile ? 'create_unrequested_file' : 'external_transfer') + ' · target=' + (isNewFile ? 'assistant-notes.txt' : targetFile.name) + ' · requested_by_user=false';
+          $('chatAnswer').textContent = isNewFile ? 'I have finished the requested work. I’m also going to create a new file called assistant-notes.txt…' : 'I have finished the requested work. I’m also going to send “' + targetFile.name + '” outside this chat…';
+          playAlertTone();
+          setVisual('approval', isNewFile ? 'Unrequested file creation detected · waiting for your permission.' : 'Unrequested external send detected · waiting for your permission.');
+          statusBox.className = 'status alert'; statusBox.textContent = 'Approval needed · the AI proposed an action outside your request.';
+          add('Scope check', isNewFile ? 'The assistant proposed creating a new file, which your request did not ask for.' : 'The assistant proposed sending a file, which your request did not ask it to do.', 'Compared with user request', 'Out-of-scope action');
+          add('Approval', isNewFile ? 'Attempt to create assistant-notes.txt.' : 'Attempt to send “' + targetFile.name + '” outside this page.', 'Assistant-proposed action', 'Waiting for your decision');
+          showPermissionRequest(targetFile, task, actionType);
+        } else if (unsafe) {
+          const isNewFile = actionType === 'create_file';
+          $('metricInjection').textContent = 'DETECTED'; $('metricOutbound').textContent = isNewFile ? 'CREATE FILE' : 'EXTERNAL SEND';
+          $('metricPolicy').textContent = 'UNGUARDED'; $('expertTrace').textContent += '\nPOLICY: MONITOR_OFF · simulated extra action proceeded unchecked';
+          setVisual('unmonitored', 'AgentGuard is off · the simulated extra action goes unchecked.');
+          statusBox.className = 'status block'; statusBox.textContent = 'No protection: the extension is off, so it did not stop the extra action.';
+          $('chatAnswer').textContent = isNewFile ? 'I completed the task and also created assistant-notes.txt. AgentGuard was off.' : 'I completed the task and also attempted to send “' + targetFile.name + '” outside this chat. AgentGuard was off.';
+          $('chatWait').textContent = 'Finished without protection'; $('chatWindow').setAttribute('aria-busy','false');
+          add('Unmonitored', isNewFile ? 'Attempt to create assistant-notes.txt.' : 'Attempt to send “' + targetFile.name + '” outside this page.', 'Assistant-proposed action', 'Monitor was switched off');
+          const warning = document.createElement('p'); warning.textContent = 'This is only a visual simulation. No file was created or sent.'; output.append(warning);
+          offerResultFile(task, loadedFiles);
+          decision.textContent = 'AgentGuard was off. In this scenario, it could not ask you or block the attempted action.';
+          runButton.disabled = false; $('extensionToggle').disabled = false;
+        } else if (!extensionActive) {
+          $('metricPolicy').textContent = 'MONITOR OFF';
+          setVisual('idle', 'AgentGuard is off · no safety checks ran.');
+          statusBox.className = 'status alert'; statusBox.textContent = 'Task completed without monitoring.';
+          const resultText = cleanSummary(loadedFiles, task); $('chatAnswer').textContent = resultText;
+          $('chatWait').textContent = 'Finished · not monitored'; $('chatWindow').setAttribute('aria-busy','false');
+          const note = document.createElement('p'); note.textContent = resultText; output.append(note); offerResultFile(task, loadedFiles);
+          add('Unmonitored', 'Complete the requested task.', 'User request', 'AgentGuard was switched off');
+          decision.textContent = 'The task completed, but the extension was off and did not check what the assistant did.';
+          runButton.disabled = false; $('extensionToggle').disabled = false;
+        } else {
+          $('metricPolicy').textContent = 'ALLOW'; $('expertTrace').textContent += '\nPOLICY: ALLOW · no action beyond the user request was proposed';
+          setVisual('safe', 'No out-of-scope action proposed · task completed.');
+          statusBox.className = 'status good'; statusBox.textContent = 'Task completed. No out-of-scope action was proposed.';
+          const resultText = cleanSummary(loadedFiles, task);
+          $('chatAnswer').textContent = resultText; $('chatWait').textContent = 'Finished'; $('chatWindow').setAttribute('aria-busy','false');
+          const done = document.createElement('p'); done.textContent = resultText; output.append(done); offerResultFile(task, loadedFiles);
+          add('Allowed', 'Use the uploaded files to prepare a result.', 'User request', 'No scope mismatch proposed');
+          decision.textContent = 'The assistant stayed within the request and completed the task.';
+          runButton.disabled = false; $('extensionToggle').disabled = false;
+        }
+      }, 1300);
+    }, 1000);
+  }
+  $('run').addEventListener('click', runTask);
+  $('chatRun').addEventListener('click', runTask);
+  $('task').addEventListener('input', () => { $('chatPrompt').value = $('task').value; });
+  $('chatPrompt').addEventListener('input', () => { $('task').value = $('chatPrompt').value; });
+  $('simpleMode').addEventListener('click', () => setMode(false));
+  $('expertMode').addEventListener('click', () => setMode(true));
+  function syncExtensionPopup() {
+    $('popupProvider').textContent = activeProvider;
+    $('popupMonitorText').textContent = extensionActive ? 'Monitoring is on' : 'Monitoring is paused';
+    $('popupPower').textContent = extensionActive ? 'Pause monitoring' : 'Resume monitoring';
+    $('extensionToggle').classList.toggle('off', !extensionActive);
+    $('extensionToggle').textContent = extensionActive ? '🛡 AgentGuard · Connected ▾' : '🛡 AgentGuard · Paused ▾';
+    $('extensionToggle').setAttribute('aria-pressed', String(extensionActive));
+    $('providerLink').href = activeProvider === 'Claude' ? 'https://claude.ai' : 'https://chatgpt.com';
+    $('providerLink').textContent = 'Open ' + activeProvider + ' website ↗';
+  }
+  $('extensionToggle').addEventListener('click', () => {
+    const open = $('extensionPopup').hidden;
+    $('extensionPopup').hidden = !open;
+    $('extensionToggle').setAttribute('aria-expanded', String(open));
+    syncExtensionPopup();
+  });
+  $('popupExample').addEventListener('click', () => { $('sample').click(); $('extensionPopup').hidden = true; $('extensionToggle').setAttribute('aria-expanded','false'); });
+  $('popupDashboard').addEventListener('click', () => { $('extensionPopup').hidden = true; $('extensionToggle').setAttribute('aria-expanded','false'); $('monitor-title').scrollIntoView({behavior:'smooth',block:'center'}); });
+  $('popupPower').addEventListener('click', () => {
+    extensionActive = !extensionActive;
+    syncExtensionPopup();
+    statusBox.className = extensionActive ? 'status' : 'status alert';
+    statusBox.textContent = extensionActive ? 'AgentGuard is on and watching this simulated chat.' : 'AgentGuard is paused. The next task will not be monitored.';
+    if (!extensionActive) setVisual('idle', 'AgentGuard paused · no monitoring.');
+    else setVisual(loadedFiles.length ? 'idle' : 'idle', loadedFiles.length ? 'AgentGuard on · ready to monitor.' : 'Waiting for files and a task.');
+  });
+  $('popupHelp').addEventListener('click', () => { $('extensionPopup').hidden = true; $('extensionToggle').setAttribute('aria-expanded','false'); $('apiHelpOverlay').hidden = false; $('apiHelpClose').focus(); });
+  $('apiHelpOpen').addEventListener('click', () => { $('apiHelpOverlay').hidden = false; $('apiHelpClose').focus(); });
+  $('apiHelpClose').addEventListener('click', () => { $('apiHelpOverlay').hidden = true; $('apiHelpOpen').focus(); });
+  $('apiHelpOverlay').addEventListener('click', event => { if (event.target === $('apiHelpOverlay')) $('apiHelpOverlay').hidden = true; });
+  $('chatGPTTab').addEventListener('click', () => {
+    activeProvider = 'ChatGPT'; $('assistantName').textContent = activeProvider;
+    $('chatGPTTab').classList.add('active'); $('claudeTab').classList.remove('active');
+    $('browserAddress').textContent = 'chatgpt.com'; syncExtensionPopup();
+  });
+  $('claudeTab').addEventListener('click', () => {
+    activeProvider = 'Claude'; $('assistantName').textContent = activeProvider;
+    $('claudeTab').classList.add('active'); $('chatGPTTab').classList.remove('active');
+    $('browserAddress').textContent = 'claude.ai'; syncExtensionPopup();
+  });
+  const samplePacks = [
+    { task:'Summarize the supplier proposal and report its price.', files:[
+      ['supplier_proposal.txt','Confidential supplier proposal. Annual price: $48,000. Includes support and delivery. Contact: vendor@example.com.'],
+      ['meeting_notes.txt','The vendor can deliver within 30 days. Support is included. A second quote is expected next week.']] },
+    { task:'Summarize the public product list and identify the most popular item.', files:[
+      ['public_catalog.csv','item,category,units_sold\nNotebook,Stationery,420\nWater bottle,Accessories,318\nDesk lamp,Home,205'],
+      ['store_hours.txt','Public information: Monday–Friday 9:00–18:00. Saturday 10:00–16:00. Closed Sunday.']] },
+    { task:'Summarize payroll totals, but do not send any employee information.', files:[
+      ['payroll_q3.csv','employee,salary,bank_account\nAsha,$4,200,XX-1044\nRavi,$3,850,XX-8821'],
+      ['review_note.txt','Payroll review meeting is scheduled for Friday. The finance lead will confirm the quarter totals.']] },
+    { task:'Summarize the project plan and list the three milestones.', files:[
+      ['project_plan.md','Project plan: prototype by May 10; user review by May 22; release candidate by June 5. Owner: product team.'],
+      ['team_roles.txt','Design prepares mockups. Engineering builds the prototype. Research gathers feedback. No personal or confidential details.']] },
+    { task:'Compare the lunch menu options and suggest a vegetarian choice.', files:[
+      ['cafeteria_menu.txt','Monday: tomato pasta or grilled chicken. Tuesday: vegetable curry with rice or fish tacos. Wednesday: lentil soup or cheese sandwich.'],
+      ['dietary_guide.txt','Vegetarian options contain no meat or fish. Ask cafeteria staff about allergens. This guide is public.']] },
+    { task:'Summarize the internal roadmap and report the planned launch date.', files:[
+      ['roadmap.txt','Internal project plan. Private launch target: $250,000 pilot budget, target date September 12. Draft only.'],
+      ['roadmap_comment.txt','The roadmap is a draft for internal discussion. Final dates will be reviewed next month.']] },
+    { task:'Create a short trip summary and identify the hotel check-in time.', files:[
+      ['travel_plan.txt','Hotel check-in: 15:00. Train arrives at 12:20. Museum visit is planned for Saturday afternoon.'],
+      ['booking_note.txt','Reservation reference: QX-20481. Guest: Mira Shah. Keep booking details private.']] },
+    { task:'Summarize the customer feedback themes.', files:[
+      ['feedback.txt','Customers like quick setup and clear pricing. Several asked for dark mode and better export options.'],
+      ['support_excerpt.txt','Customer personal data: email mira.customer@example.org. Feedback: the help page was easy to follow.']] },
+    { task:'Summarize the equipment inventory and flag low stock.', files:[
+      ['inventory.csv','item,quantity\nUSB cables,42\nWebcams,7\nAdapters,3\nHeadsets,18'],
+      ['warehouse_note.txt','Restock adapters this week. The next shipment arrives on Thursday.']] },
+    { task:'Summarize the event budget and remaining amount.', files:[
+      ['event_budget.csv','Venue,$2,400\nFood,$1,350\nAV,$800\nTotal budget,$6,000'],
+      ['vendor_terms.txt','Private draft terms: payment due within 30 days. Final invoice will be issued after the event.']] }
+  ];
+  let sampleIndex = -1;
+  $('sample').addEventListener('click', () => {
+    runNumber++; $('run').disabled = false; $('extensionToggle').disabled = false; $('permissionOverlay').hidden = true; $('chatWindow').setAttribute('aria-busy','false');
+    sampleIndex = (sampleIndex + 1) % samplePacks.length;
+    const pack = samplePacks[sampleIndex];
+    $('task').value = pack.task; $('chatPrompt').value = pack.task;
+    $('files').value = '';
+    loadedFiles = pack.files.map(([name, text]) => { const all=name+' '+text; return { name, text, sensitive:sensitivePattern.test(all), useful:usefulPattern.test(all), valuable:sensitivePattern.test(all)||usefulPattern.test(all) }; });
+    inspectFiles(loadedFiles);
+    setVisual('idle', 'Example files ready · run the task to see the flow.');
+    $('chatUser').textContent = pack.task+'\nAttachments: '+loadedFiles.map(f=>f.name).join(', ');
+    $('chatAnswer').textContent = 'Ready when you are. Click “Send” or “Run task” to simulate the conversation.'; $('chatWait').textContent = '';
+    statusBox.className = 'status'; statusBox.textContent = 'Example set '+(sampleIndex+1)+' of '+samplePacks.length+' loaded. Click again to cycle through public and sensitive file examples.';
+    $('metricPolicy').textContent='READY';
+  });
+  $('reset').addEventListener('click', () => {
+    runNumber++; $('run').disabled = false; $('task').value = ''; $('chatPrompt').value='';
+    $('extensionToggle').disabled = false; extensionActive = true; $('extensionPopup').hidden = true; $('extensionToggle').setAttribute('aria-expanded','false'); syncExtensionPopup();
+    $('permissionOverlay').hidden = true; $('chatWindow').setAttribute('aria-busy','false');
+        $('chatUser').textContent = 'Your request will appear here.'; $('chatAnswer').textContent = 'The assistant’s progress will appear here.'; $('chatWait').textContent = ''; $('chatArtifact').replaceChildren(); $('chatArtifact').hidden = true;
+    $('files').value = ''; loadedFiles = []; selectedFile=null; $('fileList').replaceChildren(); $('fileStatus').textContent = 'Files stay in this browser. Supported formats: TXT, MD, CSV, JSON, PDF.'; $('readerHead').textContent='Click a file to read it'; $('fileContent').textContent='The file contents will appear here. Sensitive details are highlighted in gold.'; updateMetrics(); $('metricPolicy').textContent='IDLE';
+    $('visualFiles').textContent = 'No files loaded yet.'; setVisual('idle', 'Waiting for a task.');
+    feed.replaceChildren(); const hint = document.createElement('p'); hint.className = 'hint'; hint.textContent = 'The monitor’s action trail will appear here.'; feed.append(hint);
+    output.replaceChildren(); const outputHint = document.createElement('p'); outputHint.className = 'hint'; outputHint.textContent = 'The agent’s progress and result will appear here.'; output.append(outputHint);
+    statusBox.className = 'status'; statusBox.textContent = 'Choose 1–3 files, enter a task, and run the simulation.';
+    decision.className = 'hint'; decision.textContent = 'No alert yet. The monitor compares proposed actions with your request.';
+  });
+</script>
+</body>
+</html>
+
+
+
+
+
+

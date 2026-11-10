@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AgentGuard</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+  <header><div class="shield">AG</div><div><strong>AgentGuard</strong><small>Browser companion · preview</small></div><button id="openDashboard" class="icon" title="Open security dashboard">↗</button></header>
+  <div id="connection" class="connection"><i></i><span>Checking this tab…</span></div>
+  <button id="enableSite" class="primary" hidden>Enable AgentGuard on this site</button>
+  <div class="privacy">🔒 This companion uses synthetic examples. It does not read or upload your personal files.</div>
+  <section id="exampleTools">
+    <label for="sample">Choose an example set</label><select id="sample"></select>
+    <div id="preview" class="preview"></div>
+    <button id="insert" class="primary" disabled>Insert example prompt + files</button>
+    <p class="help">This fills the chat box and attaches the demo files. You review and press Send yourself.</p>
+  </section>
+  <div class="toolbar"><span id="monitorState">Monitor is on</span><button id="toggle" class="toggle">Pause</button></div>
+  <p class="limitations">Strict checks cover visible page activity. Unknown HTTPS AI sites need permission individually; hidden provider-side actions may not be visible.</p>
+  <script src="samples.js"></script><script src="popup.js"></script>
+</body></html>

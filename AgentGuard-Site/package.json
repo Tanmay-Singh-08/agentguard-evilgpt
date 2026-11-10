@@ -1,0 +1,12 @@
+{
+  "name": "agentguard-live-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AgentGuard live API approval-gate prototype",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

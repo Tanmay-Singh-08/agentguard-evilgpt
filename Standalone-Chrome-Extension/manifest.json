@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "AgentGuard Preview",
+  "version": "0.7.0",
+  "description": "A strict local companion that monitors visible AI chat activity with site-by-site permission.",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "optional_host_permissions": ["https://*/*"],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://aistudio.google.com/*",
+    "https://copilot.microsoft.com/*",
+    "https://perplexity.ai/*",
+    "https://*.perplexity.ai/*",
+    "https://grok.com/*",
+    "https://*.grok.com/*",
+    "https://chat.deepseek.com/*",
+    "https://chat.mistral.ai/*",
+    "https://meta.ai/*",
+    "http://127.0.0.1:3189/*",
+    "file:///*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "AgentGuard",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://aistudio.google.com/*",
+        "https://copilot.microsoft.com/*",
+        "https://perplexity.ai/*",
+        "https://*.perplexity.ai/*",
+        "https://grok.com/*",
+        "https://*.grok.com/*",
+        "https://chat.deepseek.com/*",
+        "https://chat.mistral.ai/*",
+        "https://meta.ai/*",
+        "http://127.0.0.1:3189/*",
+        "file:///*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
